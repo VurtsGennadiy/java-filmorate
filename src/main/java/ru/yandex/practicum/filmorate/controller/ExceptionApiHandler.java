@@ -17,16 +17,16 @@ public class ExceptionApiHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public String handleMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
-        StringBuilder response = new StringBuilder();
+        StringBuilder message = new StringBuilder();
         for (FieldError error : exception.getFieldErrors()) {
-            response.append("Поле ");
-            response.append(error.getField());
-            response.append(" ");
-            response.append(error.getDefaultMessage());
-            response.append(System.lineSeparator());
+            message.append("Поле ");
+            message.append(error.getField());
+            message.append(" ");
+            message.append(error.getDefaultMessage());
+            message.append(". ");
         }
         log.warn("Invalid request", exception);
-        return response.toString();
+        return String.format("{\"errorMessage\":\"%s\"}", message);
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -34,13 +34,13 @@ public class ExceptionApiHandler {
     public String handleNotFoundException(NotFoundException exception) {
         log.warn("Invalid request", exception);
         exception.fillInStackTrace();
-        return exception.getMessage();
+        return String.format("{\"errorMessage\":\"%s\"}", exception.getMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({ValidationException.class, DuplicateDataException.class})
     public String handleException(Exception exception) {
         log.warn("Invalid request", exception);
-        return exception.getMessage();
+        return String.format("{\"errorMessage\":\"%s\"}", exception.getMessage());
     }
 }
