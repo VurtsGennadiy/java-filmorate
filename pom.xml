@@ -49,6 +49,34 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>3.3.1</version>
+				<configuration>
+					<!-- подключаем файл с конфигурацией проверок -->
+					<configLocation>checkstyle.xml</configLocation>
+
+					<!-- завершить билд с ошибкой, если обнаружено нарушение стиля -->
+					<failOnViolation>true</failOnViolation>
+
+					<!-- следует ли проверять код тестов -->
+					<includeTestSourceDirectory>true</includeTestSourceDirectory>
+
+					<!-- отображать ошибки в консоли -->
+					<logViolationsToConsole>true</logViolationsToConsole>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<!-- Цель check проверяет, есть ли в проекте нарушения. Она завершает билд с ошибкой, если нарушения найдены: -->
+							<goal>check</goal>
+						</goals>
+						<!-- привязываем цель к фазе компиляции -->
+						<phase>compile</phase>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
