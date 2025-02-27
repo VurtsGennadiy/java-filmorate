@@ -5,12 +5,13 @@ import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.*;
-import ru.yandex.practicum.filmorate.annotation.AfterCinemaDay;
+import ru.yandex.practicum.filmorate.annotation.SinceDate;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class Film {
+    public static final String CINEMA_DAY = "1895-12-28";
     private Integer id;
 
     @NotBlank
@@ -20,9 +21,9 @@ public class Film {
     private String description;
 
     @PastOrPresent
-    @AfterCinemaDay(message = "должно быть не раньше 28 декабря 1895 г.")
-    LocalDate releaseDate;
+    @SinceDate(CINEMA_DAY)
+    private LocalDate releaseDate;
 
     @Positive
-    Integer duration;
+    private Integer duration;
 }
