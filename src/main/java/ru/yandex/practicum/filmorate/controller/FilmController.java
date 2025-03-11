@@ -1,61 +1,48 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/films")
 @Slf4j
+@RequiredArgsConstructor
 public class FilmController {
-    private final Map<Integer, Film> films;
-    private Integer id;
-
-    public FilmController() {
-        films = new HashMap<>();
-        id = 0;
-    }
+    private final FilmStorage filmStorage;
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Film create(@Valid @RequestBody Film film) {
         log.trace("Запрос на создание нового фильма.");
-        film.setId(getNextId());
-        films.put(film.getId(), film);
-        log.info("Создан новый фильм id = {}", film.getId());
-        return film;
+        return filmStorage.add(film);
     }
 
     @PutMapping
     public Film update(@Valid @RequestBody Film film) {
         log.trace("Запрос на обновление данных о фильме.");
-        checkId(film.getId());
-        films.put(film.getId(), film);
-        log.info("Обновлены данные фильма id = {}", film.getId());
-        return film;
+        return filmStorage.update(film);
+    }
+
+    @DeleteMapping("/{id}")
+    public Film remove(@PathVariable Integer id) {
+        log.trace("Запрос на удаления фильма");
+        return filmStorage.remove(id);
     }
 
     @GetMapping
     public Collection<Film> getAllFilms() {
         log.trace("Запрос на получение всех фильмов.");
-        return films.values();
+        return filmStorage.getFilms();
     }
 
-    private Integer getNextId() {
-        return ++id;
-    }
-
-    private void checkId(Integer id) {
-        if (id == null) {
-            throw new ValidationException("В теле запроса необходимо указать id.");
-        } else if (!films.containsKey(id)) {
-            throw new NotFoundException("Фильм с id = " + id + " не существует.");
-        }
+    @GetMapping("/{id}")
+    public Film getFilm(@PathVariable Integer id) {
+        return filmStorage.getFilm(id);
     }
 }
