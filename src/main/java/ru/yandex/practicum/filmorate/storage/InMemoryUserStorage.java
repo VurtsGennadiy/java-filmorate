@@ -6,15 +6,13 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Component
 @Slf4j
 public class InMemoryUserStorage implements UserStorage {
     private final Map<Integer, User> users = new HashMap<>();
-    private Integer id = 0;
+    private Integer idCounter = 0;
 
     @Override
     public User getUser(Integer id) {
@@ -51,7 +49,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     private Integer getNextId() {
-        return ++id;
+        return ++idCounter;
     }
 
     private void checkId(Integer id) {

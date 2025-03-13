@@ -16,7 +16,7 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 public class ExceptionApiHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public String handleMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
+    public ErrorResponse handleMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
         StringBuilder message = new StringBuilder();
         for (FieldError error : exception.getFieldErrors()) {
             message.append("Поле ");
@@ -26,21 +26,28 @@ public class ExceptionApiHandler {
             message.append(". ");
         }
         log.warn("Invalid request", exception);
-        return String.format("{\"errorMessage\":\"%s\"}", message);
-    }
-
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(NotFoundException.class)
-    public String handleNotFoundException(NotFoundException exception) {
-        log.warn("Invalid request", exception);
-        exception.fillInStackTrace();
-        return String.format("{\"errorMessage\":\"%s\"}", exception.getMessage());
+        return new ErrorResponse(message.toString());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({ValidationException.class, DuplicateDataException.class})
-    public String handleException(Exception exception) {
+    public ErrorResponse handleException(Exception exception) {
         log.warn("Invalid request", exception);
-        return String.format("{\"errorMessage\":\"%s\"}", exception.getMessage());
+        return new ErrorResponse(exception.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(NotFoundException.class)
+    public ErrorResponse handleNotFoundException(NotFoundException exception) {
+        log.warn("Invalid request", exception);
+        exception.fillInStackTrace();
+        return new ErrorResponse(exception.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse error(Throwable e) {
+        log.warn("Error", e);
+        return new ErrorResponse("Произошла непредвиденная ошибка.");
     }
 }
