@@ -1,8 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -14,19 +14,30 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 @Slf4j
 @RestControllerAdvice
 public class ExceptionApiHandler {
+
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ErrorResponse handleMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
-        StringBuilder message = new StringBuilder();
-        for (FieldError error : exception.getFieldErrors()) {
-            message.append("Поле ");
-            message.append(error.getField());
-            message.append(" ");
-            message.append(error.getDefaultMessage());
-            message.append(". ");
-        }
+        String message = exception.getFieldErrors().stream()
+                .map(fieldError -> "Поле " + fieldError.getField() + " " + fieldError.getDefaultMessage() + ". ")
+                .reduce(" ", String::concat);
+
         log.warn("Invalid request", exception);
-        return new ErrorResponse(message.toString());
+        return new ErrorResponse(message.strip());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ErrorResponse handleConstraintViolationException(ConstraintViolationException exception) {
+        String message = exception.getConstraintViolations().stream()
+                .map(violation -> {
+                    String path = violation.getPropertyPath().toString();
+                    String fieldName = path.substring(path.lastIndexOf(".") + 1);
+                    return  fieldName +  " " + violation.getMessage() + ". ";
+                })
+                .reduce("", String::concat);
+        log.warn("Invalid request", exception);
+        return new ErrorResponse(message.strip());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -46,7 +57,7 @@ public class ExceptionApiHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse error(Throwable e) {
+    public ErrorResponse error(Exception e) {
         log.warn("Error", e);
         return new ErrorResponse("Произошла непредвиденная ошибка.");
     }
