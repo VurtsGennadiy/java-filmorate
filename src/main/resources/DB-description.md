@@ -6,7 +6,7 @@
  **film** - информация о фильмах.
 * _film_id_, int, NOT NULL - primary key
 * _name_, varchar(255), NOT NULL - название фильма
-* _description_, text - описание фильма
+* _description_, varchar(200) - описание фильма
 * _release_, date - дата выхода фильма
 * _duration_, int - продолжительность фильма в минутах
 * _rating_, varchar(5) - возрастной рейтинг Американской киноассоциации (MPAA)
@@ -21,9 +21,9 @@
 
  **user** - информация о пользователях.
 * _user_id_, int, NOT NULL - primary key
-* _email_, varchar, NOT NULL - электронная почта
-* _login_, varchar, NOT NULL - логин
-* _name_, varchar - имя
+* _email_, varchar(255), NOT NULL - электронная почта
+* _login_, varchar(30), NOT NULL - логин
+* _name_, varchar(255) - имя
 * _birthday_, date - дата рождения
 
  **friendship** - дружественные связи пользователей.
@@ -87,3 +87,11 @@ AND friend_id IN (
   WHERE friend_id = 1);
 ```
 
+- Список неподтверждённых друзей
+```dbn-psql
+SELECT friend_id FROM friendship
+WHERE user_id = 1
+AND friend_id NOT IN (
+  SELECT user_id FROM friendship
+  WHERE friend_id = 1);
+```
