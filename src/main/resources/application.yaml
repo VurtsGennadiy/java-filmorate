@@ -1,1 +1,13 @@
 logging.level.org.zalando.logbook: TRACE
+
+spring:
+  sql.init.mode: always # выполнение SQL скриптов для инициализации БД при каждом запуске приложения
+  # src/main/resources/schema.sql - создание схемы БД
+  # src/main/resources/data.sql - заполнение данными
+  datasource:
+    # сохранение данных в файл
+    # отключение автоматического перевода имен полей и таблиц в верхний регистр
+    url: jdbc:h2:file:./db/filmorate;DATABASE_TO_UPPER=false;
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
