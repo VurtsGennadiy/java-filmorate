@@ -1,7 +1,13 @@
 CREATE TABLE IF NOT EXISTS genres (
     genre_id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(30) NOT NULL,
-    CONSTRAINT uq_name UNIQUE (name)
+    CONSTRAINT uq_genre_name UNIQUE (name)
+);
+
+CREATE TABLE IF NOT EXISTS mpa (
+    mpa_id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(5),
+    CONSTRAINT uq_mpa_name UNIQUE (name)
 );
 
 CREATE TABLE IF NOT EXISTS films (
@@ -10,7 +16,8 @@ CREATE TABLE IF NOT EXISTS films (
     description VARCHAR(200),
     release DATE,
     duration INT,
-    rating VARCHAR(5)
+    mpa_id INT,
+    FOREIGN KEY (mpa_id) REFERENCES mpa(mpa_id)
 );
 
 CREATE TABLE IF NOT EXISTS users (
@@ -18,7 +25,8 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) NOT NULL,
     login VARCHAR(30) NOT NULL,
     name VARCHAR(255),
-    birthday DATE
+    birthday DATE,
+    CONSTRAINT uq_user_email UNIQUE (email)
 );
 
 CREATE TABLE IF NOT EXISTS friendship (
