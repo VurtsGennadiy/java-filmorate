@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.db;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Primary;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
@@ -13,12 +14,13 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
+@Primary
 @RequiredArgsConstructor
 public class MPARepository implements MPAStorage {
     private final NamedParameterJdbcOperations jdbc;
     private final MPARowMapper mapper;
 
-    public static final String FIND_ALL_QUERY = "SELECT * FROM mpa";
+    public static final String FIND_ALL_QUERY = "SELECT * FROM mpa ORDER BY mpa_id";
     public static final String FIND_MPA_BY_ID = "SELECT * FROM mpa WHERE mpa_id = :mpa_id";
 
     public List<MPA> findAll() {

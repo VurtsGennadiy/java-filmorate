@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.memory;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -11,14 +12,23 @@ import java.util.*;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class InMemoryUserStorage implements UserStorage {
+    private final InMemoryFriendStorage friendStorage;
     private final Map<Integer, User> users = new HashMap<>();
     private Integer idCounter = 0;
 
     @Override
-    public User getUser(Integer id) {
+    public Optional<User> getUser(Integer id) {
         checkId(id);
-        return users.get(id);
+        return Optional.ofNullable(users.get(id));
+    }
+
+    @Override
+    public Optional<User> getUser(String email) {
+        return users.values().stream()
+                .filter(user -> email.equals(user.getEmail()))
+                .findFirst();
     }
 
     @Override
@@ -26,6 +36,7 @@ public class InMemoryUserStorage implements UserStorage {
         user.setId(getNextId());
         users.put(user.getId(), user);
         log.info("Создан новый пользователь id = {}", user.getId());
+        friendStorage.addEmpty(user.getId());
         return user;
     }
 
@@ -47,6 +58,13 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public Collection<User> getUsers() {
         return users.values();
+    }
+
+    @Override
+    public Collection<User> getUsers(List<Integer> ids) {
+        return users.values().stream()
+                .filter(user -> ids.contains(user.getId()))
+                .toList();
     }
 
     private Integer getNextId() {

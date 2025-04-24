@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.memory;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -12,7 +13,9 @@ import java.util.*;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class InMemoryFilmStorage implements FilmStorage {
+    private final InMemoryUserStorage userStorage;
     private final Map<Integer, Film> films = new HashMap<>();
     private final Map<Integer, Set<User>> likes = new HashMap<>();
     private Integer idCounter = 0;
@@ -55,28 +58,28 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film addLike(Integer filmId, User user) {
-        log.trace("Поставить лайк фильму id = {} пользователь id = {}", filmId, user.getId());
-        checkId(filmId);
+    public void addLike(Integer filmId, Integer userId) {
+        log.trace("Поставить лайк фильму id = {} пользователь id = {}", filmId, userId);
+        checkId(filmId); // ??
+        User user = userStorage.getUser(userId).get();
         likes.get(filmId).add(user);
-        return films.get(filmId);
     }
 
     @Override
-    public Film removeLike(Integer filmId, User user) {
-        log.trace("Удалить лайк фильма id = {} пользователь id = {}", filmId, user.getId());
+    public void removeLike(Integer filmId, Integer userId) {
+        log.trace("Удалить лайк фильма id = {} пользователь id = {}", filmId, userId);
         checkId(filmId);
+        User user = userStorage.getUser(userId).get();
         likes.get(filmId).remove(user);
-        return films.get(filmId);
     }
 
     @Override
-    public Map<Integer, Set<User>> getAllLikes() {
-        return likes;
-    }
-
-    private Integer getNextId() {
-        return ++idCounter;
+    public List<Film> getPopular(int limit) {
+        return likes.entrySet().stream()
+                .sorted((entry1, entry2) -> Integer.compare(entry2.getValue().size(), entry1.getValue().size()))
+                .limit(limit)
+                .map(item -> getFilm(item.getKey()).orElseThrow())
+                .toList();
     }
 
     private void checkId(Integer id) {
@@ -85,5 +88,9 @@ public class InMemoryFilmStorage implements FilmStorage {
         } else if (!films.containsKey(id)) {
             throw new NotFoundException("Фильм с id = " + id + " не существует.");
         }
+    }
+
+    private Integer getNextId() {
+        return ++idCounter;
     }
 }

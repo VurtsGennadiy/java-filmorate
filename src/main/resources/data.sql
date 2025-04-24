@@ -1,10 +1,10 @@
 MERGE INTO "genres" USING (
-    VALUES  ('комедия'),
-            ('драма'),
-            ('мультфильм'),
-            ('триллер'),
-            ('документальный'),
-            ('боевик')
+    VALUES  ('Комедия'),
+            ('Драма'),
+            ('Мультфильм'),
+            ('Триллер'),
+            ('Документальный'),
+            ('Боевик')
     ) AS new_genres ("name")
 ON "genres"."name" = new_genres."name"
 WHEN NOT MATCHED THEN

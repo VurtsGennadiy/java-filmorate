@@ -1,24 +1,25 @@
 package ru.yandex.practicum.filmorate.storage.db;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Primary;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-@Component
+@Repository
+@Primary
 @RequiredArgsConstructor
 public class GenreRepository implements GenreStorage {
     private final NamedParameterJdbcOperations jdbc;
     private final RowMapper<Genre> mapper;
 
-    public static final String FIND_ALL_QUERY = "SELECT * FROM genres";
+    public static final String FIND_ALL_QUERY = "SELECT * FROM genres ORDER BY genre_id";
     public static final String FIND_BY_ID_QUERY = "SELECT * FROM genres WHERE genre_id = :genre_id";
 
     @Override
@@ -36,5 +37,16 @@ public class GenreRepository implements GenreStorage {
         } catch (EmptyResultDataAccessException emptyResult) {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public boolean containsAll(Collection<Integer> ids) {
+        Set<Integer> setIds = new HashSet<>(ids);
+        String SQL = """
+                SELECT COUNT(genre_id) FROM genres
+                WHERE genre_id IN (:set_id)""";
+        MapSqlParameterSource params = new MapSqlParameterSource("set_id", setIds);
+        Integer countFound = jdbc.queryForObject(SQL, params, Integer.class);
+        return Objects.equals(setIds.size(), countFound);
     }
 }

@@ -5,10 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.storage.FriendStorage;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -30,14 +27,13 @@ public class InMemoryFriendStorage implements FriendStorage {
         friends.get(secondId).remove(firstId);
     }
 
-    @Override
     public void addEmpty(Integer userId) {
         log.trace("Добавить пустую запись в хранилище друзей для пользователя id = {}", userId);
         friends.put(userId, new HashSet<>());
     }
 
     @Override
-    public Set<Integer> get(Integer id) {
-        return friends.get(id);
+    public List<Integer> get(Integer id) {
+        return new ArrayList<>(friends.get(id));
     }
 }

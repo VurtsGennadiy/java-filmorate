@@ -3,23 +3,27 @@
 ![ER - диаграмма](ER-diagram.png)
 
 ## Таблицы
- **film** - информация о фильмах.
+ **films** - информация о фильмах.
 * _film_id_, int, NOT NULL - primary key
 * _name_, varchar(255), NOT NULL - название фильма
 * _description_, varchar(200) - описание фильма
 * _release_, date - дата выхода фильма
 * _duration_, int - продолжительность фильма в минутах
-* _rating_, varchar(5) - возрастной рейтинг Американской киноассоциации (MPAA)
+* _mpa_id_, int - внешний ключ (ссылается на mpa.mpa_id)
 
- **genre** - информация о жанрах фильмов.
+ **genres** - информация о жанрах фильмов.
 * _genre_id_, int, NOT NULL - primary key
 * _name_, varchar(30), NOT NULL - название жанра
+
+**mpa** - информация о рейтингах Американской киноассоциации (MPA)
+* _mpa_id_, int, NOT NULL - primary key
+* _name_, varchar(5), NOT NULL - название рейтинга
 
  **film_genre** - соединительная таблица, для связи таблиц film и genre. У одного фильма может быть несколько жанров.
 * _film_id_, int, NOT NULL - составной первичный ключ, внешний ключ (ссылается на film.film_id)
 * _genre_id_, int, NOT NULL - составной первичный ключ, внешний ключ (ссылается на genre.genre_id)
 
- **user** - информация о пользователях.
+ **users** - информация о пользователях.
 * _user_id_, int, NOT NULL - primary key
 * _email_, varchar(255), NOT NULL - электронная почта
 * _login_, varchar(30), NOT NULL - логин
@@ -34,18 +38,18 @@
   user id = 1 отправляет запрос на дружбу пользователю user id = 2 - добавляем в таблицу строку: |1| |2|.
   После того как user id = 2 подтверждает дружбу - добавляем в таблицу ещё 1 строку: |2| |1|.
 
- **like** - проставленные лайки к фильмам.
+ **likes** - проставленные лайки к фильмам.
 * _film_id_, int, NOT NULL - составной первичный ключ, внешний ключ (ссылается на film.film_id)
 * _user_id_, int, NOT NULL - составной первичный ключ, внешний ключ (ссылается на user.user_id)
 
 ## Примеры запросов
 - Получение всех фильмов
 ```dbn-psql
-SELECT * FROM film;
+SELECT * FROM films;
 ```
 - Список фильмов по жанру
 ```dbn-psql
-SELECT f.name FROM film AS f
+SELECT f.name FROM films AS f
 WHERE f.film_id IN (
     SELECT fg.film_id
     FROM film_genre AS fg INNER JOIN genre AS g ON fg.genre_id = g.genre_id
@@ -55,13 +59,13 @@ WHERE f.film_id IN (
 
 - Количество лайков у фильма
 ```dbn-psql
-SELECT COUNT(user_id) FROM like WHERE film_id = 1;
+SELECT COUNT(user_id) FROM likes WHERE film_id = 1;
 ```
 
 - Получение N самых популярных фильмов
 ```dbn-psql
-SELECT f.name FROM film AS f WHERE f.film_id IN (
-    SELECT l.film_id FROM like AS l
+SELECT f.name FROM films AS f WHERE f.film_id IN (
+    SELECT l.film_id FROM likes AS l
     GROUP BY l.film_id
     ORDER BY COUNT(l.user_id) DESC
     LIMIT N);
@@ -69,7 +73,7 @@ SELECT f.name FROM film AS f WHERE f.film_id IN (
 
 - Получение всех пользователей
 ```dbn-psql
-SELECT * FROM user;
+SELECT * FROM users;
 ```
 
 - Список друзей пользователя (подтверждённые и неподтвержденные)
