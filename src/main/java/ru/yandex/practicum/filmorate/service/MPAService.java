@@ -14,11 +14,11 @@ public class MPAService {
     private final MPAStorage storage;
 
     public List<MPA> getAll() {
-        return storage.findAll();
+        return storage.getAll();
     }
 
     public MPA getMPAbyId(int id) {
-        return storage.findById(id)
+        return storage.getById(id)
                 .orElseThrow(() -> new NotFoundException("Рейтинг MPA с id = " + id + " не найден"));
     }
 }

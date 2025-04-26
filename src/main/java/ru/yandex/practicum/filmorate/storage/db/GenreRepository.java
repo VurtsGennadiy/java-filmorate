@@ -19,20 +19,19 @@ public class GenreRepository implements GenreStorage {
     private final NamedParameterJdbcOperations jdbc;
     private final RowMapper<Genre> mapper;
 
-    public static final String FIND_ALL_QUERY = "SELECT * FROM genres ORDER BY genre_id";
-    public static final String FIND_BY_ID_QUERY = "SELECT * FROM genres WHERE genre_id = :genre_id";
-
     @Override
-    public List<Genre> findAll() {
-        return jdbc.query(FIND_ALL_QUERY, mapper);
+    public List<Genre> getAll() {
+        String sql = "SELECT * FROM genres ORDER BY genre_id";
+        return jdbc.query(sql, mapper);
     }
 
     @Override
-    public Optional<Genre> findById(int id) {
+    public Optional<Genre> getById(int id) {
+        String sql = "SELECT * FROM genres WHERE genre_id = :genre_id";
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("genre_id", id);
         try {
-            Genre genre = jdbc.queryForObject(FIND_BY_ID_QUERY, params, mapper);
+            Genre genre = jdbc.queryForObject(sql, params, mapper);
             return Optional.ofNullable(genre);
         } catch (EmptyResultDataAccessException emptyResult) {
             return Optional.empty();
@@ -42,11 +41,11 @@ public class GenreRepository implements GenreStorage {
     @Override
     public boolean containsAll(Collection<Integer> ids) {
         Set<Integer> setIds = new HashSet<>(ids);
-        String SQL = """
+        String sql = """
                 SELECT COUNT(genre_id) FROM genres
                 WHERE genre_id IN (:set_id)""";
         MapSqlParameterSource params = new MapSqlParameterSource("set_id", setIds);
-        Integer countFound = jdbc.queryForObject(SQL, params, Integer.class);
+        Integer countFound = jdbc.queryForObject(sql, params, Integer.class);
         return Objects.equals(setIds.size(), countFound);
     }
 }

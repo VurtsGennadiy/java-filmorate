@@ -41,8 +41,8 @@ public class FilmService {
         return filmStorage.update(film);
     }
 
-    public Film remove(Integer id) {
-        return filmStorage.remove(id);
+    public void remove(Integer id) {
+        filmStorage.remove(id);
     }
 
     public Optional<Film> getFilm(Integer id) {
@@ -70,7 +70,7 @@ public class FilmService {
     }
 
     private void checkMpaExists(int mpaId) {
-        mpaStorage.findById(mpaId)
+        mpaStorage.getById(mpaId)
                 .orElseThrow(() -> new NotFoundException("Рейтинг MPA id = " + mpaId + " не существует"));
     }
 

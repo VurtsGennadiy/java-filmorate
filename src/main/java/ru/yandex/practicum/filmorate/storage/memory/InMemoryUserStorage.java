@@ -32,7 +32,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User add(User user) {
+    public User create(User user) {
         user.setId(getNextId());
         users.put(user.getId(), user);
         log.info("Создан новый пользователь id = {}", user.getId());
@@ -41,11 +41,12 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User remove(Integer id) {
+    public void remove(Integer id) {
         checkId(id);
+        List<Integer> userFriendsIds = friendStorage.get(id);
+        userFriendsIds.forEach(friendId -> friendStorage.remove(id, friendId));
         User user = users.remove(id);
         log.info("Удалён пользователь id = {}", id);
-        return user;
     }
 
     @Override

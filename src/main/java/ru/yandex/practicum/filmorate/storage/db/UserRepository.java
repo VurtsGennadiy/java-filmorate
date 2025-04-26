@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.db;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.RowMapper;
@@ -19,12 +20,13 @@ import java.util.StringJoiner;
 @Repository
 @Primary
 @RequiredArgsConstructor
+@Slf4j
 public class UserRepository implements UserStorage {
     private final NamedParameterJdbcOperations jdbc;
     private final RowMapper<User> userRowMapper;
 
     @Override
-    public User add(User user) {
+    public User create(User user) {
         String sql = """
                 INSERT INTO users (email, login, name, birthday)
                 VALUES (:email, :login, :name, :birthday)""";
@@ -38,13 +40,10 @@ public class UserRepository implements UserStorage {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(sql, params, keyHolder);
         user.setId(keyHolder.getKeyAs(Integer.class));
+        log.info("Создан новый пользователь id = {}", user.getId());
         return user;
     }
 
-    @Override
-    public User remove(Integer id) {
-        return null;
-    }
 
     @Override
     public User update(User user) {
@@ -64,7 +63,20 @@ public class UserRepository implements UserStorage {
         params.addValue("user_id", user.getId());
 
         jdbc.update(sql, params);
+        log.info("Обновлены данные пользователя id = {}", user.getId());
         return user;
+    }
+
+    @Override
+    public void remove(Integer id) {
+        log.trace("Удаление пользователя id = {}", id);
+        String sql = "DELETE FROM users WHERE user_id = :user_id";
+        MapSqlParameterSource params = new MapSqlParameterSource("user_id", id);
+        if (jdbc.update(sql, params) > 0) {
+            log.info("Удалён пользователь id = {}", id);
+        } else {
+            log.warn("Не удалось удалить пользователя id = {}", id);
+        }
     }
 
     @Override

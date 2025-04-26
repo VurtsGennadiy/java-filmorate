@@ -1,14 +1,14 @@
-MERGE INTO "genres" USING (
+MERGE INTO genres USING (
     VALUES  ('Комедия'),
             ('Драма'),
             ('Мультфильм'),
             ('Триллер'),
             ('Документальный'),
             ('Боевик')
-    ) AS new_genres ("name")
-ON "genres"."name" = new_genres."name"
+    ) AS new_genres (name)
+ON genres.name = new_genres.name
 WHEN NOT MATCHED THEN
-    INSERT ("name") VALUES (new_genres."name");
+    INSERT (name) VALUES (new_genres.name);
 
 MERGE INTO mpa USING (
     VALUES  ('G'),

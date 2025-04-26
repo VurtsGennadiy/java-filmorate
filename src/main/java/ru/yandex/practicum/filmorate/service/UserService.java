@@ -18,7 +18,7 @@ public class UserService {
     public User create(User user) {
         checkEmailDuplicate(user.getEmail());
         checkUserName(user);
-        return userStorage.add(user);
+        return userStorage.create(user);
     }
 
     public User update(User user) {
@@ -30,13 +30,13 @@ public class UserService {
         return userStorage.update(user);
     }
 
-    // TODO
-    public User remove(Integer id) {
-        User user = userStorage.remove(id);
-        friendService.getFriends(id).stream()
+    public void remove(Integer id) {
+        userStorage.getUser(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + id + " не существует"));
+        userStorage.remove(id);
+/*        friendService.getFriends(id).stream()
                 .map(User::getId)
-                .forEach((Integer friendId) -> friendService.removeFriend(friendId, id));
-        return user;
+                .forEach((Integer friendId) -> friendService.removeFriend(friendId, id));*/
     }
 
     public User getUser(Integer id) {

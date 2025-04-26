@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserStorage {
-    User add(User user);
+    User create(User user);
 
-    User remove(Integer id);
+    void remove(Integer id);
 
     User update(User user);
 

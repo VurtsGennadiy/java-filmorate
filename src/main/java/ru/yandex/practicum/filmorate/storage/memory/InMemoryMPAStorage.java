@@ -11,24 +11,24 @@ import java.util.Optional;
 
 @Component
 public class InMemoryMPAStorage implements MPAStorage {
-    private final Map<Integer, MPA> MPARatings;
+    private final Map<Integer, MPA> mpaRatings;
 
     public InMemoryMPAStorage() {
-        MPARatings = new HashMap<>();
-        MPARatings.put(1, new MPA(1,"G"));
-        MPARatings.put(2, new MPA(2,"PG"));
-        MPARatings.put(3, new MPA(3,"PG-13"));
-        MPARatings.put(4, new MPA(4,"R"));
-        MPARatings.put(5, new MPA(5,"NC-17"));
+        mpaRatings = new HashMap<>();
+        mpaRatings.put(1, new MPA(1,"G"));
+        mpaRatings.put(2, new MPA(2,"PG"));
+        mpaRatings.put(3, new MPA(3,"PG-13"));
+        mpaRatings.put(4, new MPA(4,"R"));
+        mpaRatings.put(5, new MPA(5,"NC-17"));
     }
 
     @Override
-    public List<MPA> findAll() {
-        return List.copyOf(MPARatings.values());
+    public List<MPA> getAll() {
+        return List.copyOf(mpaRatings.values());
     }
 
     @Override
-    public Optional<MPA> findById(int id) {
-        return Optional.ofNullable(MPARatings.get(id));
+    public Optional<MPA> getById(int id) {
+        return Optional.ofNullable(mpaRatings.get(id));
     }
 }

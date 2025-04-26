@@ -9,6 +9,7 @@ import java.util.*;
 @Component
 public class InMemoryGenreStorage implements GenreStorage {
     private final Map<Integer, Genre> genres;
+
     public InMemoryGenreStorage() {
         genres = new HashMap<>();
         genres.put(1, new Genre(1,"Комедия"));
@@ -18,13 +19,14 @@ public class InMemoryGenreStorage implements GenreStorage {
         genres.put(5, new Genre(5,"Документальный"));
         genres.put(6, new Genre(6,"Боевик"));
     }
+
     @Override
-    public List<Genre> findAll() {
+    public List<Genre> getAll() {
         return List.copyOf(genres.values());
     }
 
     @Override
-    public Optional<Genre> findById(int id) {
+    public Optional<Genre> getById(int id) {
         return Optional.ofNullable(genres.get(id));
     }
 

@@ -14,11 +14,11 @@ public class GenreService {
     private final GenreStorage genreStorage;
 
     public List<Genre> getAll() {
-        return genreStorage.findAll();
+        return genreStorage.getAll();
     }
 
     public Genre getById(int id) {
-        return genreStorage.findById(id)
+        return genreStorage.getById(id)
                 .orElseThrow(() -> new NotFoundException("Жанр с id = " + id + " не найден"));
     }
 }

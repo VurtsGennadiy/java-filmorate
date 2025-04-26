@@ -32,8 +32,9 @@ public class FilmController {
     }
 
     @DeleteMapping("/{id}")
-    public Film remove(@PathVariable Integer id) {
-        return filmService.remove(id);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void remove(@PathVariable Integer id) {
+        filmService.remove(id);
     }
 
     @GetMapping

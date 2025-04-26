@@ -23,11 +23,11 @@ public class MPARepository implements MPAStorage {
     public static final String FIND_ALL_QUERY = "SELECT * FROM mpa ORDER BY mpa_id";
     public static final String FIND_MPA_BY_ID = "SELECT * FROM mpa WHERE mpa_id = :mpa_id";
 
-    public List<MPA> findAll() {
+    public List<MPA> getAll() {
         return jdbc.query(FIND_ALL_QUERY, mapper);
     }
 
-    public Optional<MPA> findById (int id) {
+    public Optional<MPA> getById(int id) {
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("mpa_id", id);
         try {

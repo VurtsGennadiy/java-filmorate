@@ -27,8 +27,9 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public User remove(@PathVariable Integer id) {
-        return userService.remove(id);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void remove(@PathVariable Integer id) {
+        userService.remove(id);
     }
 
     @GetMapping("/{id}")
