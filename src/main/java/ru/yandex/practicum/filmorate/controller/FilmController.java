@@ -10,7 +10,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/films")
@@ -43,7 +42,7 @@ public class FilmController {
     }
 
     @GetMapping("/{id}")
-    public Optional<Film> getFilm(@PathVariable Integer id) {
+    public Film getFilm(@PathVariable Integer id) {
         return filmService.getFilm(id);
     }
 

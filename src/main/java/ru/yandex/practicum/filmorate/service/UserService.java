@@ -13,7 +13,6 @@ import java.util.Collection;
 @RequiredArgsConstructor
 public class UserService {
     private final UserStorage userStorage;
-    private final FriendService friendService;
 
     public User create(User user) {
         checkEmailDuplicate(user.getEmail());
@@ -34,9 +33,6 @@ public class UserService {
         userStorage.getUser(id)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + id + " не существует"));
         userStorage.remove(id);
-/*        friendService.getFriends(id).stream()
-                .map(User::getId)
-                .forEach((Integer friendId) -> friendService.removeFriend(friendId, id));*/
     }
 
     public User getUser(Integer id) {

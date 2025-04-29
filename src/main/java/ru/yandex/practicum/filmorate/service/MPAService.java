@@ -1,14 +1,14 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.storage.MPAStorage;
 
 import java.util.List;
 
-@Component
+@Service
 @RequiredArgsConstructor
 public class MPAService {
     private final MPAStorage storage;

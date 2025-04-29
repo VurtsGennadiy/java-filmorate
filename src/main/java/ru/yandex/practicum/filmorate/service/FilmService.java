@@ -11,7 +11,6 @@ import ru.yandex.practicum.filmorate.storage.MPAStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -45,8 +44,9 @@ public class FilmService {
         filmStorage.remove(id);
     }
 
-    public Optional<Film> getFilm(Integer id) {
-        return filmStorage.getFilm(id);
+    public Film getFilm(Integer id) {
+        return filmStorage.getFilm(id)
+                .orElseThrow(() -> new NotFoundException("Фильм id = " + id + " не существует"));
     }
 
     public Collection<Film> getAll() {
