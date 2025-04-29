@@ -1,6 +1,9 @@
 package ru.yandex.practicum.filmorate.model;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
+
 import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -26,4 +29,6 @@ public class Film {
 
     @Positive
     private Integer duration;
+    private Set<Genre> genres = new HashSet<>();
+    private MPA mpa;
 }

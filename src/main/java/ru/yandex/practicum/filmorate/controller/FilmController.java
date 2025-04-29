@@ -21,7 +21,8 @@ public class FilmController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Film create(@Valid @RequestBody Film film) {
-        return filmService.create(film);
+        filmService.create(film);
+        return film;
     }
 
     @PutMapping
@@ -30,8 +31,9 @@ public class FilmController {
     }
 
     @DeleteMapping("/{id}")
-    public Film remove(@PathVariable Integer id) {
-        return filmService.remove(id);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void remove(@PathVariable Integer id) {
+        filmService.remove(id);
     }
 
     @GetMapping
@@ -45,15 +47,15 @@ public class FilmController {
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public Film addLike(@PathVariable Integer id,
+    public void addLike(@PathVariable Integer id,
                         @PathVariable Integer userId) {
-        return filmService.addLike(id, userId);
+        filmService.addLike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public Film removeLike(@PathVariable Integer id,
+    public void removeLike(@PathVariable Integer id,
                            @PathVariable Integer userId) {
-        return filmService.removeLike(id, userId);
+        filmService.removeLike(id, userId);
     }
 
     @GetMapping("/popular")
