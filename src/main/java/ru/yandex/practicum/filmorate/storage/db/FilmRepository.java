@@ -167,19 +167,42 @@ public class FilmRepository implements FilmStorage {
     }
 
     @Override
-    public List<Film> getPopular(int limit) {
-        String sql = """
-                SELECT * FROM films
-                LEFT OUTER JOIN mpa ON films.mpa_id = mpa.mpa_id
-                WHERE film_id IN (
-                    SELECT film_id FROM likes
-                    GROUP BY film_id
-                    ORDER BY COUNT(user_id) DESC)
-                LIMIT :limit""";
-        MapSqlParameterSource params = new MapSqlParameterSource("limit", limit);
-        List<Film> films = jdbc.query(sql, params, filmRowMapper);
-        connectGenres(films);
-        connectDirectors(films);
+    public List<Film> getPopular(Integer count, Integer genreId, Integer year) {
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        StringBuilder sql = new StringBuilder("""
+        SELECT f.film_id
+        FROM films f
+        LEFT JOIN film_genre fg ON f.film_id = fg.film_id
+        LEFT JOIN likes l ON f.film_id = l.film_id
+        WHERE 1=1
+    """);
+
+        if (genreId != null) {
+            sql.append(" AND fg.genre_id = :genreId");
+            params.addValue("genreId", genreId);
+        }
+        if (year != null) {
+            sql.append(" AND EXTRACT(YEAR FROM f.release) = :year");
+            params.addValue("year", year);
+        }
+        sql.append(" GROUP BY f.film_id ORDER BY COUNT(l.user_id) DESC");
+        if (count != null) {
+            sql.append(" LIMIT :count");
+            params.addValue("count", count);
+        }
+
+        List<Integer> filmIds = jdbc.queryForList(sql.toString(), params, Integer.class);
+
+        if (filmIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        MapSqlParameterSource paramsFilms = new MapSqlParameterSource();
+        paramsFilms.addValue("filmIds", filmIds);
+
+        List<Film> films = (List<Film>) getFilms(filmIds);
+        films.sort(Comparator.comparingInt(f -> filmIds.indexOf(f.getId())));
+
         return films;
     }
 
