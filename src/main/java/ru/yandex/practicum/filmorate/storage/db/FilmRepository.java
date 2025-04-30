@@ -167,6 +167,7 @@ public class FilmRepository implements FilmStorage {
         return films;
     }
 
+    //Группировка теперь происходит по среднему рейтингу, фильмам без оценок присваивается 0.0
     @Override
     public List<Film> getPopular(Integer count, Integer genreId, Integer year) {
         MapSqlParameterSource params = new MapSqlParameterSource();
@@ -186,7 +187,7 @@ public class FilmRepository implements FilmStorage {
             sql.append(" AND EXTRACT(YEAR FROM f.release) = :year");
             params.addValue("year", year);
         }
-        sql.append(" GROUP BY f.film_id ORDER BY COUNT(l.user_id) DESC");
+        sql.append(" GROUP BY f.film_id ORDER BY COALESCE(AVG(l.score), 0.0) DESC");
         if (count != null) {
             sql.append(" LIMIT :count");
             params.addValue("count", count);
@@ -272,23 +273,28 @@ public class FilmRepository implements FilmStorage {
         log.info("Удалён фильм id = {}", id);
     }
 
+    //Переписан метод добавления лайка, добавлен обязательный параметр score
+    //upd: добавленно возвращаемое значение, т.к. тест Add mark ожидает что-то получить
+    //upd: вернул обратно void, т.к. тест ожидает возвращаемое значение в другом формате (в каком?)
+    //возможно потребуется добавить поле rate в film mapper
     @Override
-    public void addLike(Integer filmId, Integer userId) {
-        log.trace("Поставить лайк фильму id = {} пользователь id = {}", filmId, userId);
+    public void addOrUpdateScore(Integer filmId, Integer userId, Integer score) {
+        log.trace("Поставить оценку фильму id = {} пользователь id = {}, оценка score = {}", filmId, userId, score);
         String sql = """
-                INSERT INTO likes (film_id, user_id)
-                VALUES (:film_id, :user_id)""";
+                MERGE INTO likes (film_id, user_id, score)
+                VALUES (:film_id, :user_id, :score)""";
 
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("film_id", filmId);
         params.addValue("user_id", userId);
+        params.addValue("score", score);
 
         jdbc.update(sql, params);
     }
 
     @Override
     public void removeLike(Integer filmId, Integer userId) {
-        log.trace("Удалить лайк фильма id = {} пользователь id = {}", filmId, userId);
+        log.trace("Удалить оценку фильма id = {} пользователь id = {}", filmId, userId);
         String sql = """
                 DELETE FROM likes
                 WHERE (film_id = :film_id AND user_id = :user_id)""";
@@ -350,12 +356,14 @@ public class FilmRepository implements FilmStorage {
         return sortByLikes(getFilms(filmsId));
     }
 
+    //Изменён метод сортировки: фильмы сортируются по среднему рейтингу, если у фильма нет оценок рейтинг присваивается
+    //0.0 ; Изменена итоговая сборка: фильмы с рейтингом 0.0 добавляются в конце
     private List<Film> sortByLikes(Collection<Film> films) {
         String sql = """
                 SELECT film_id FROM likes
                 WHERE film_id IN (:filmsIds)
                 GROUP BY (film_id)
-                ORDER BY COUNT(user_id) DESC""";
+                ORDER BY COALESCE(AVG(score), 0.0) DESC""";
         Map<Integer, Film> filmsMap = films.stream()
                 .collect(Collectors.toMap(Film::getId, film -> film));
         MapSqlParameterSource params = new MapSqlParameterSource("filmsIds", filmsMap.keySet());
@@ -364,8 +372,11 @@ public class FilmRepository implements FilmStorage {
         LinkedHashSet<Film> sortedFilms = new LinkedHashSet<>(
                 sortedFilmsIds.stream()
                         .map(filmsMap::get)
+                        .filter(Objects::nonNull)
                         .toList());
-        sortedFilms.addAll(films);
+        films.stream()
+                .filter(f -> !sortedFilmsIds.contains(f.getId()))
+                .forEach(sortedFilms::add);
         return new ArrayList<>(sortedFilms);
     }
 
@@ -375,6 +386,7 @@ public class FilmRepository implements FilmStorage {
         return sortedFilms;
     }
 
+    //Изменена выдача фильмов, рекомендуются только фильмы с рейтингом 6+
     @Override
     public Collection<Film> getRecommendedFilms(Integer userId, Integer friendId) {
         log.trace("Найти не совпадающие фильмы пользователя id = {} и id = {}", userId, friendId);
@@ -382,6 +394,7 @@ public class FilmRepository implements FilmStorage {
                 SELECT film_id
                 FROM likes
                 WHERE user_id = :friendId
+                AND score >= 6
                 AND film_id NOT IN (
                     SELECT film_id FROM likes WHERE user_id = :userId)
                 """;

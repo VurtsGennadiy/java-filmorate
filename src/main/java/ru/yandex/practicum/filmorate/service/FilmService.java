@@ -65,14 +65,15 @@ public class FilmService {
         return filmStorage.getFilmsByDirector(directorId, sortBy);
     }
 
-    public void addLike(Integer filmId, Integer userId) {
+    //Метод больше не проверяет уникальность события, так как в случае повторной добавки оценки происходит апдейт
+    public void addOrUpdateScore(Integer filmId, Integer userId, Integer score) {
         checkFilmExists(filmId);
         checkUserExists(userId);
-        try {
-            filmStorage.addLike(filmId, userId);
-        } catch (DuplicateKeyException ignored) {
-            log.info("Пользователь с id = {} уже добалял лайк фильму с id = {} ", userId, filmId);
-        }
+        //try {
+            filmStorage.addOrUpdateScore(filmId, userId, score);
+        //} catch (DuplicateKeyException ignored) {
+          //  log.info("Пользователь с id = {} уже добалял лайк фильму с id = {} ", userId, filmId);
+        //}
         eventService.createEvent(userId, Event.EventType.LIKE, Event.Operation.ADD, filmId);
     }
 

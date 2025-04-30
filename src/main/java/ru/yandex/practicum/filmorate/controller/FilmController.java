@@ -47,10 +47,13 @@ public class FilmController {
         return filmService.getFilm(id);
     }
 
-    @PutMapping("/{id}/like/{userId}")
+    //Я совершенно не представляю как нужно соответствовать тесту add like, но
+    @PutMapping("/{id}/like/{userId}/{score}")
     public void addLike(@PathVariable Integer id,
-                        @PathVariable Integer userId) {
-        filmService.addLike(id, userId);
+                        @PathVariable Integer userId,
+                        @PathVariable(required = false) Integer score) {
+
+        filmService.addOrUpdateScore(id, userId, score);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
