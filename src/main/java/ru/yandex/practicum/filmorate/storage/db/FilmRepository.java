@@ -196,4 +196,30 @@ public class FilmRepository implements FilmStorage {
 
         jdbc.update(sql, params);
     }
+
+    @Override
+    public List<Film> getCommonFilmsByUsers(Integer userId, Integer friendId) {
+        log.trace("Найти общие фильмы пользователя id = {} и id = {}", userId, friendId);
+        String sql = """
+    SELECT f.film_id, f.name, f.description, f.release, f.duration,
+    f.mpa_id, m.name AS mpa_name,
+    g.name AS genre_name,
+    COUNT(l.user_id)  AS like_count
+    FROM films AS f
+    LEFT JOIN mpa AS m ON f.mpa_id = m.mpa_id
+    LEFT JOIN film_genre AS fg ON f.film_id = fg.film_id
+    LEFT JOIN genres AS g ON fg.genre_id = g.genre_id
+    JOIN likes AS l1 ON f.film_id = l1.film_id AND l1.user_id = :userId
+    JOIN likes AS l2 ON f.film_id = l2.film_id AND l2.user_id = :friendId
+    LEFT JOIN likes AS l ON f.film_id = l.film_id
+    GROUP BY f.film_id, m.name, g.name
+    """;
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("userId", userId);
+        params.addValue("friendId", friendId);
+
+        List<Film> films = jdbc.query(sql, params, filmRowMapper);
+        connectGenres(films);
+        return films;
+    }
 }
