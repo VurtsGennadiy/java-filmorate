@@ -21,6 +21,9 @@ public class ReviewsService {
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
 
+    private static final int GRADE_LIKE = 1;
+    private static final int GRADE_DISLIKE = -1;
+
     public Reviews create(Reviews reviews) {
         log.info("Запрос на добавление пользователя");
         checkUserId(reviews.getUserId());
@@ -50,23 +53,19 @@ public class ReviewsService {
     }
 
     public void putLike(Integer reviewsId, Integer userId) {
-        reviewsStorage.putLikes(reviewsId, userId);
-        Reviews review = reviewsStorage.getReviewsById(reviewsId).orElseThrow();
-        reviewsStorage.updateReviews(review);
+        reviewsStorage.createLikeDislike(reviewsId, userId, GRADE_LIKE);
     }
 
     public void putDislike(Integer reviewsId, Integer userId) {
-        reviewsStorage.putDislikes(reviewsId, userId);
-        Reviews review = reviewsStorage.getReviewsById(reviewsId).orElseThrow();
-        reviewsStorage.updateReviews(review);
+        reviewsStorage.createLikeDislike(reviewsId, userId, GRADE_DISLIKE);
     }
 
     public void deleteLike(Integer reviewsId, Integer userId) {
-        reviewsStorage.deleteLikes(reviewsId, userId);
+        reviewsStorage.deleteLikeDislike(reviewsId, userId, GRADE_LIKE);
     }
 
     public void deleteDislike(Integer reviewsId, Integer userId) {
-        reviewsStorage.deleteDislikes(reviewsId, userId);
+        reviewsStorage.deleteLikeDislike(reviewsId, userId, GRADE_DISLIKE);
     }
 
     private void checkUserId(Integer userId) {

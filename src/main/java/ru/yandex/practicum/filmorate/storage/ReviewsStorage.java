@@ -17,11 +17,7 @@ public interface ReviewsStorage {
 
     List<Reviews> getPopularReviews(Integer filmId, Integer count);
 
-    void putLikes(Integer id, Integer userId);
+    void createLikeDislike(Integer id, Integer userId, Integer grade);
 
-    void putDislikes(Integer id, Integer userId);
-
-    void deleteLikes(Integer id, Integer userId);
-
-    void deleteDislikes(Integer id, Integer userId);
+    void deleteLikeDislike(Integer id, Integer userId, Integer grade);
 }

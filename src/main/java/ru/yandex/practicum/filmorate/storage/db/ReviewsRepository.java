@@ -23,9 +23,6 @@ public class ReviewsRepository implements ReviewsStorage {
     private final NamedParameterJdbcTemplate jdbc;
     private final ReviewsRowMapper mapper;
 
-    private static final int GRADE_LIKE = 1;
-    private static final int GRADE_DISLIKE = -1;
-
     private static final String GET_SQL = """
             SELECT r.reviews_id, 
                     r.content, 
@@ -120,9 +117,8 @@ public class ReviewsRepository implements ReviewsStorage {
     }
 
     @Override
-    public void putLikes(Integer id, Integer userId) {
-        deleteDislikes(id, userId);
-        log.info("Пользователь {} ставит лайк отзыву {}", userId, id);
+    public void createLikeDislike(Integer id, Integer userId, Integer grade) {
+        deleteLikeDislike(id, userId, grade == 1 ? -1 : 1);
         String sql = """
                 INSERT INTO likes_reviews (reviews_id, user_id, grade) 
                 VALUES (:reviews_id, :user_id, :grade)
@@ -130,28 +126,12 @@ public class ReviewsRepository implements ReviewsStorage {
         MapSqlParameterSource paramSource = new MapSqlParameterSource();
         paramSource.addValue("reviews_id", id);
         paramSource.addValue("user_id", userId);
-        paramSource.addValue("grade", GRADE_LIKE);
+        paramSource.addValue("grade", grade);
         jdbc.update(sql, paramSource);
     }
 
     @Override
-    public void putDislikes(Integer id, Integer userId) {
-        deleteLikes(id, userId);
-        log.info("Пользователь {} ставит дизлайк отзыву {}", userId, id);
-        String sql = """
-                INSERT INTO likes_reviews (reviews_id, user_id, grade) 
-                VALUES (:reviews_id, :user_id, :grade)
-                """;
-        MapSqlParameterSource paramSource = new MapSqlParameterSource();
-        paramSource.addValue("reviews_id", id);
-        paramSource.addValue("user_id", userId);
-        paramSource.addValue("grade", GRADE_DISLIKE);
-        jdbc.update(sql, paramSource);
-    }
-
-    @Override
-    public void deleteLikes(Integer id, Integer userId) {
-        log.info("Пользователь {} удаляет лайк с отзыва {}", userId, id);
+    public void deleteLikeDislike(Integer id, Integer userId, Integer grade) {
         String sql = """
                 DELETE FROM likes_reviews
                 WHERE (reviews_id = :reviews_id AND user_id = :user_id AND grade = :grade)
@@ -159,21 +139,7 @@ public class ReviewsRepository implements ReviewsStorage {
         MapSqlParameterSource paramSource = new MapSqlParameterSource();
         paramSource.addValue("reviews_id", id);
         paramSource.addValue("user_id", userId);
-        paramSource.addValue("grade", GRADE_LIKE);
-        jdbc.update(sql, paramSource);
-    }
-
-    @Override
-    public void deleteDislikes(Integer id, Integer userId) {
-        log.info("Пользователь {} удаляет дизлайк с отзыва {}", userId, id);
-        String sql = """
-                DELETE FROM likes_reviews
-                WHERE (reviews_id = :reviews_id AND user_id = :user_id AND grade =:grade)
-                """;
-        MapSqlParameterSource paramSource = new MapSqlParameterSource();
-        paramSource.addValue("reviews_id", id);
-        paramSource.addValue("user_id", userId);
-        paramSource.addValue("grade", GRADE_DISLIKE);
+        paramSource.addValue("grade", grade);
         jdbc.update(sql, paramSource);
     }
 }
