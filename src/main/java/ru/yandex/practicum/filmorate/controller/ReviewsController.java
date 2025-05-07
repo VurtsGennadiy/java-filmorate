@@ -29,7 +29,6 @@ public class ReviewsController {
         return reviewsService.update(reviews);
     }
 
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{reviewId}")
     public void deleteReviews(@PathVariable @Positive @NotNull Integer reviewId) {
         reviewsService.delete(reviewId);
@@ -56,13 +55,11 @@ public class ReviewsController {
         reviewsService.putDislike(reviewId, userId);
     }
 
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{reviewId}/like/{userId}")
     public void deleteLike(@PathVariable @Positive Integer reviewId, @PathVariable @Positive Integer userId) {
         reviewsService.deleteLike(reviewId, userId);
     }
 
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{reviewId}/dislike/{userId}")
     public void deleteDislike(@PathVariable @Positive Integer reviewId, @PathVariable @Positive Integer userId) {
         reviewsService.deleteDislike(reviewId, userId);

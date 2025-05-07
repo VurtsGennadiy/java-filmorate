@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Reviews {
-    private Integer id;
+    private Integer reviewId;
 
     @NotBlank
     @NotNull

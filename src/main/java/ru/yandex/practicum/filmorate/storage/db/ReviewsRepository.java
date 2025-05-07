@@ -26,6 +26,17 @@ public class ReviewsRepository implements ReviewsStorage {
     private static final int GRADE_LIKE = 1;
     private static final int GRADE_DISLIKE = -1;
 
+    private static final String GET_SQL = """
+            SELECT r.reviews_id, 
+                    r.content, 
+                    r.is_Positive, 
+                    r.film_id, 
+                    r.user_id, 
+                    COALESCE(SUM(l.grade), 0) AS useful
+                FROM reviews AS r
+                LEFT JOIN likes_reviews AS l ON r.reviews_id = l.reviews_id
+            """;
+
     @Override
     public Reviews createReviews(Reviews reviews) {
         String sql = """
@@ -39,15 +50,15 @@ public class ReviewsRepository implements ReviewsStorage {
         paramSource.addValue("filmId", reviews.getFilmId());
         jdbc.update(sql, paramSource, keyHolder);
 
-        reviews.setId(keyHolder.getKey().intValue());
+        reviews.setReviewId(keyHolder.getKey().intValue());
         reviews.setUseful(0);
-        log.info("Creating reviews with id: {}", reviews.getId());
+        log.info("Creating reviews with id: {}", reviews.getReviewId());
         return reviews;
     }
 
     @Override
     public Reviews updateReviews(Reviews reviews) {
-        //предполагается, что при обнавлении нельзя изменить userID и filmID
+        //предполагается, что при обновлении нельзя изменить userID и filmID
         String sql = """
                 UPDATE reviews
                 SET content = :content,
@@ -55,13 +66,18 @@ public class ReviewsRepository implements ReviewsStorage {
                 WHERE reviews_id = :reviews_id
                 """;
         MapSqlParameterSource paramSource = new MapSqlParameterSource();
-        paramSource.addValue("reviews_id", reviews.getContent());
+        paramSource.addValue("reviews_id", reviews.getReviewId());
         paramSource.addValue("content", reviews.getContent());
         paramSource.addValue("isPositive", reviews.getIsPositive());
 
         jdbc.update(sql, paramSource);
-        //TODO добавить подсчет рейтинга
-        return reviews;
+
+        String sqlByNewReviews = """
+                WHERE r.reviews_id = :reviews_id
+                GROUP BY r.reviews_id
+                """;
+        MapSqlParameterSource newParamSource = new MapSqlParameterSource("reviews_id", reviews.getReviewId());
+        return jdbc.queryForObject(GET_SQL + sqlByNewReviews, newParamSource, mapper);
     }
 
     @Override
@@ -78,14 +94,12 @@ public class ReviewsRepository implements ReviewsStorage {
     @Override
     public Optional<Reviews> getReviewsById(Integer id) {
         String sql = """
-                SELECT * FROM reviews
-                LEFT OUTER JOIN reviews ON reviews.reviews_id = reviews_id
-                WHERE reviews_id = :reviews_id
+                WHERE r.reviews_id = :reviews_id
+                GROUP BY r.reviews_id
                 """;
         MapSqlParameterSource paramSource = new MapSqlParameterSource("reviews_id", id);
         try {
-            Reviews reviews = jdbc.queryForObject(sql, paramSource, mapper);
-            //TODO - обавить подсчет рейтинга
+            Reviews reviews = jdbc.queryForObject(GET_SQL + sql, paramSource, mapper);
             return Optional.of(reviews);
         } catch (EmptyResultDataAccessException ex) {
             return Optional.empty();
@@ -95,26 +109,20 @@ public class ReviewsRepository implements ReviewsStorage {
     @Override
     public List<Reviews> getPopularReviews(Integer filmId, Integer count) {
         String sql = """
-                SELECT r.reviews_id, 
-                    r.content, 
-                    r.is_Positive, 
-                    r.user_id, 
-                    SUM(l.grade) 
-                FROM reviews AS r
-                LEFT JOIN likes_reviews AS l ON r.reviews_id = l.reviews_id
                 WHERE r.film_id = :film_id
-                GROUP BY r.reviews_id 
+                GROUP BY r.reviews_id
                 LIMIT :count
                 """;
         MapSqlParameterSource paramSource = new MapSqlParameterSource();
         paramSource.addValue("film_id", filmId);
         paramSource.addValue("count", count);
-        return jdbc.query(sql, paramSource, mapper);
+        return jdbc.query(GET_SQL + sql, paramSource, mapper);
     }
 
     @Override
     public void putLikes(Integer id, Integer userId) {
-        log.trace("Пользователь {} ставит лайк отзыву {}", userId, id);
+        deleteDislikes(id, userId);
+        log.info("Пользователь {} ставит лайк отзыву {}", userId, id);
         String sql = """
                 INSERT INTO likes_reviews (reviews_id, user_id, grade) 
                 VALUES (:reviews_id, :user_id, :grade)
@@ -128,10 +136,11 @@ public class ReviewsRepository implements ReviewsStorage {
 
     @Override
     public void putDislikes(Integer id, Integer userId) {
-        log.trace("Пользователь {} ставит дизлайк отзыву {}", userId, id);
+        deleteLikes(id, userId);
+        log.info("Пользователь {} ставит дизлайк отзыву {}", userId, id);
         String sql = """
                 INSERT INTO likes_reviews (reviews_id, user_id, grade) 
-                VALUES (:reviews_id, :userId, :grade)
+                VALUES (:reviews_id, :user_id, :grade)
                 """;
         MapSqlParameterSource paramSource = new MapSqlParameterSource();
         paramSource.addValue("reviews_id", id);
@@ -142,10 +151,10 @@ public class ReviewsRepository implements ReviewsStorage {
 
     @Override
     public void deleteLikes(Integer id, Integer userId) {
-        log.trace("Пользователь {} удаляет лайк с отзыва {}", userId, id);
+        log.info("Пользователь {} удаляет лайк с отзыва {}", userId, id);
         String sql = """
                 DELETE FROM likes_reviews
-                WHERE (reviews_id = :reviews_id, user_id = :user_id, grade = :grade)
+                WHERE (reviews_id = :reviews_id AND user_id = :user_id AND grade = :grade)
                 """;
         MapSqlParameterSource paramSource = new MapSqlParameterSource();
         paramSource.addValue("reviews_id", id);
@@ -156,20 +165,15 @@ public class ReviewsRepository implements ReviewsStorage {
 
     @Override
     public void deleteDislikes(Integer id, Integer userId) {
-        log.trace("Пользователь {} удаляет дизлайк с отзыва {}", userId, id);
+        log.info("Пользователь {} удаляет дизлайк с отзыва {}", userId, id);
         String sql = """
                 DELETE FROM likes_reviews
-                WHERE (reviews_id = :reviews_id, user_id = :user_id, grade =:grade)
+                WHERE (reviews_id = :reviews_id AND user_id = :user_id AND grade =:grade)
                 """;
         MapSqlParameterSource paramSource = new MapSqlParameterSource();
         paramSource.addValue("reviews_id", id);
         paramSource.addValue("user_id", userId);
         paramSource.addValue("grade", GRADE_DISLIKE);
         jdbc.update(sql, paramSource);
-    }
-
-    private Integer countUseful(Reviews reviews) {
-        int count = 0;
-        return count;
     }
 }
