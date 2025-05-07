@@ -24,11 +24,11 @@ public class ReviewsRepository implements ReviewsStorage {
     private final ReviewsRowMapper mapper;
 
     private static final String GET_SQL = """
-            SELECT r.reviews_id, 
-                    r.content, 
-                    r.is_Positive, 
-                    r.film_id, 
-                    r.user_id, 
+            SELECT r.reviews_id,
+                    r.content,
+                    r.is_Positive,
+                    r.film_id,
+                    r.user_id,
                     COALESCE(SUM(l.grade), 0) AS useful
                 FROM reviews AS r
                 LEFT JOIN likes_reviews AS l ON r.reviews_id = l.reviews_id
@@ -121,7 +121,7 @@ public class ReviewsRepository implements ReviewsStorage {
     public void createLikeDislike(Integer id, Integer userId, Integer grade) {
         deleteLikeDislike(id, userId, grade == 1 ? -1 : 1);
         String sql = """
-                INSERT INTO likes_reviews (reviews_id, user_id, grade) 
+                INSERT INTO likes_reviews (reviews_id, user_id, grade)
                 VALUES (:reviews_id, :user_id, :grade)
                 """;
         MapSqlParameterSource paramSource = new MapSqlParameterSource();
