@@ -225,6 +225,7 @@ public class FilmRepository implements FilmStorage {
         connectGenres(films);
         return films;
     }
+
     private List<Film> sortByLikes(Collection<Film> films) {
         String sql = """
                 SELECT film_id FROM likes
