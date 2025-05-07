@@ -3,14 +3,13 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.GenreStorage;
-import ru.yandex.practicum.filmorate.storage.MPAStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.*;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -21,12 +20,14 @@ public class FilmService {
     private final UserStorage userStorage;
     private final MPAStorage mpaStorage;
     private final GenreStorage genreStorage;
+    private final DirectorStorage directorStorage;
 
     public Film create(Film film) {
         if (film.getMpa() != null) {
             checkMpaExists(film.getMpa().getId());
         }
         checkGenresExists(film.getGenres());
+        checkDirectorsExists(film.getDirectors());
         filmStorage.create(film);
         return film;
     }
@@ -37,6 +38,7 @@ public class FilmService {
             checkMpaExists(film.getMpa().getId());
         }
         checkGenresExists(film.getGenres());
+        checkDirectorsExists(film.getDirectors());
         return filmStorage.update(film);
     }
 
@@ -51,6 +53,11 @@ public class FilmService {
 
     public Collection<Film> getAll() {
         return filmStorage.getFilms();
+    }
+
+    public List<Film> getFilmsByDirector(int directorId, String sortBy) {
+        directorStorage.getDirector(directorId);
+        return filmStorage.getFilmsByDirector(directorId, sortBy);
     }
 
     public void addLike(Integer filmId, Integer userId) {
@@ -81,6 +88,16 @@ public class FilmService {
                         .collect(Collectors.toSet()));
         if (!containsAll) {
             throw new NotFoundException("Один или несколько указанных жанров не существуют");
+        }
+    }
+
+    private void checkDirectorsExists(Set<Director> directors) {
+        boolean containsAll = directorStorage.containsAll(
+                directors.stream()
+                        .map(Director::getId)
+                        .collect(Collectors.toSet()));
+        if (!containsAll) {
+            throw new NotFoundException("Один или несколько указанных режиссёров не существуют");
         }
     }
 
