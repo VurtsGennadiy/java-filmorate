@@ -36,6 +36,7 @@ public class ReviewsRepository implements ReviewsStorage {
 
     @Override
     public Reviews createReviews(Reviews reviews) {
+        log.info("Запрос на добавление пользователя");;
         String sql = """
                 INSERT INTO reviews (content, is_Positive, user_id, film_id)
                 VALUES (:content, :isPositive, :userId, :filmId)""";

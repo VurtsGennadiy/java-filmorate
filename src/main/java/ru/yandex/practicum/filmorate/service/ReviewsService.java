@@ -25,7 +25,6 @@ public class ReviewsService {
     private static final int GRADE_DISLIKE = -1;
 
     public Reviews create(Reviews reviews) {
-        log.info("Запрос на добавление пользователя");
         checkUserId(reviews.getUserId());
         checkFilmId(reviews.getFilmId());
         return reviewsStorage.createReviews(reviews);
