@@ -201,25 +201,41 @@ public class FilmRepository implements FilmStorage {
     public List<Film> getCommonFilmsByUsers(Integer userId, Integer friendId) {
         log.trace("Найти общие фильмы пользователя id = {} и id = {}", userId, friendId);
         String sql = """
-    SELECT f.film_id, f.name, f.description, f.release, f.duration,
-    f.mpa_id, m.name AS mpa_name,
-    g.name AS genre_name,
-    COUNT(l.user_id)  AS like_count
-    FROM films AS f
-    LEFT JOIN mpa AS m ON f.mpa_id = m.mpa_id
-    LEFT JOIN film_genre AS fg ON f.film_id = fg.film_id
-    LEFT JOIN genres AS g ON fg.genre_id = g.genre_id
-    JOIN likes AS l1 ON f.film_id = l1.film_id AND l1.user_id = :userId
-    JOIN likes AS l2 ON f.film_id = l2.film_id AND l2.user_id = :friendId
-    LEFT JOIN likes AS l ON f.film_id = l.film_id
-    GROUP BY f.film_id, m.name, g.name
+    SELECT film_id
+    FROM LIKES
+    WHERE user_id IN (:userId, :friendId)
+    GROUP BY film_id
+    HAVING COUNT(DISTINCT user_id) = 2;
     """;
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("userId", userId);
         params.addValue("friendId", friendId);
 
-        List<Film> films = jdbc.query(sql, params, filmRowMapper);
+        List<Integer> ids = jdbc.queryForList(sql, params, Integer.class);
+        return sortByLikes(getFilms(ids));
+    }
+
+    public Collection<Film> getFilms(Collection<Integer> ids) {
+        String sql = """
+            SELECT * FROM films
+            LEFT OUTER JOIN mpa ON films.mpa_id = mpa.mpa_id
+            WHERE film_id IN (:film_ids)""";
+        MapSqlParameterSource params = new MapSqlParameterSource("film_ids", ids);
+        Collection<Film> films = jdbc.query(sql, params, filmRowMapper);
         connectGenres(films);
         return films;
+    }
+    private List<Film> sortByLikes(Collection<Film> films) {
+        String sql = """
+                SELECT film_id FROM likes
+                WHERE film_id IN (:filmsIds)
+                GROUP BY (film_id)
+                ORDER BY COUNT(user_id) DESC""";
+        Map<Integer, Film> filmsMap = films.stream()
+                .collect(Collectors.toMap(Film::getId, film -> film));
+        MapSqlParameterSource params = new MapSqlParameterSource("filmsIds", filmsMap.keySet());
+
+        List<Integer> sortedFilmsIds = jdbc.queryForList(sql, params, Integer.class);
+        return sortedFilmsIds.stream().map(filmsMap::get).toList();
     }
 }

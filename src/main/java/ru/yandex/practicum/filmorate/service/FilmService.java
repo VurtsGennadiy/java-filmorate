@@ -95,6 +95,8 @@ public class FilmService {
     }
 
     public Collection<Film> getCommonFilmsByUsers(Integer userId, Integer friendId) {
+        checkUserExists(userId);
+        checkUserExists(friendId);
         return filmStorage.getCommonFilmsByUsers(userId, friendId);
     }
 }
