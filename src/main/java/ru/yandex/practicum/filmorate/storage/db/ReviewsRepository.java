@@ -123,7 +123,7 @@ public class ReviewsRepository implements ReviewsStorage {
 
     @Override
     public void createLikeDislike(Integer id, Integer userId, Integer grade) {
-        log.info("Пользователь {} хочет поставить {} на отзыв {}", userId, grade == 1 ? "лайк" : "дизлайк", id );
+        log.info("Пользователь {} хочет поставить {} на отзыв {}", userId, grade == 1 ? "лайк" : "дизлайк", id);
         deleteLikeDislike(id, userId, grade == 1 ? -1 : 1);
         String sql = """
                 INSERT INTO likes_reviews (reviews_id, user_id, grade)
@@ -138,7 +138,7 @@ public class ReviewsRepository implements ReviewsStorage {
 
     @Override
     public void deleteLikeDislike(Integer id, Integer userId, Integer grade) {
-        log.info("Пользователь {} хочет удалить {} на отзыв {}", userId, grade == 1 ? "лайк" : "дизлайк", id );
+        log.info("Пользователь {} хочет удалить {} на отзыв {}", userId, grade == 1 ? "лайк" : "дизлайк", id);
         String sql = """
                 DELETE FROM likes_reviews
                 WHERE (reviews_id = :reviews_id AND user_id = :user_id AND grade = :grade)
