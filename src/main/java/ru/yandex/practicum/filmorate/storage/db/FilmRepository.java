@@ -28,7 +28,8 @@ public class FilmRepository implements FilmStorage {
     @Override
     public Film create(Film film) {
         String sql = """
-            INSERT INTO films (name, description, release, duration, mpa_id)
+            
+                INSERT INTO films (name, description, release, duration, mpa_id)
             VALUES (:name, :description, :release, :duration, :mpa_id)""";
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = new MapSqlParameterSource();
@@ -99,9 +100,12 @@ public class FilmRepository implements FilmStorage {
 
     @Override
     public Optional<Film> getFilm(Integer id) {
-        String sql = """
-            SELECT * FROM films
-            LEFT OUTER JOIN mpa ON films.mpa_id = mpa.mpa_id
+        String sql =
+                """
+            SELECT
+                * FROM films
+            LEFT OUTER JOIN mpa ON
+                films.mpa_id = mpa.mpa_id
             WHERE film_id = :film_id""";
         MapSqlParameterSource params = new MapSqlParameterSource("film_id", id);
 
@@ -115,8 +119,9 @@ public class FilmRepository implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getFilms() {
-        String sql = """
+    public Collection<Film>
+                getFilms() {
+                String sql = """
             SELECT * FROM films
             LEFT OUTER JOIN mpa ON films.mpa_id = mpa.mpa_id""";
         Collection<Film> films = jdbc.query(sql, filmRowMapper);
@@ -140,9 +145,12 @@ public class FilmRepository implements FilmStorage {
         return films;
     }
 
-    private void connectGenres(Collection<Film> films) {
-        String selectGenresSQL = """
-               SELECT * FROM film_genre AS fg
+    private void connectGenres(Collection<
+                Film> films) {
+        String
+                selectGenresSQL = """
+               SELECT * FROM
+                film_genre AS fg
                LEFT JOIN genres ON fg.genre_id = genres.genre_id
                WHERE film_id IN (:film_ids)""";
         List<Integer> filmIds = films.stream().map(Film::getId).toList();
@@ -199,10 +207,14 @@ public class FilmRepository implements FilmStorage {
 
     @Override
     public List<Film> getCommonFilmsByUsers(Integer userId, Integer friendId) {
-        log.trace("Найти общие фильмы пользователя id = {} и id = {}", userId, friendId);
+                log.trace("Найти о
+                фильмы пол
+                теля id = {} и id = {}", userId, friendId)
+                ;
         String sql = """
     SELECT film_id
-    FROM LIKES
+    FROM
+                LIKES
     WHERE user_id IN (:userId, :friendId)
     GROUP BY film_id
     HAVING COUNT(DISTINCT user_id) = 2;
@@ -212,10 +224,11 @@ public class FilmRepository implements FilmStorage {
         params.addValue("friendId", friendId);
 
         List<Integer> ids = jdbc.queryForList(sql, params, Integer.class);
-        return sortByLikes(getFilms(ids));
+        return sortByLikes(getFilms
+                (ids));
     }
-
-    public Collection<Film> getFilms(Collection<Integer> ids) {
+                public Collection<Film> getFilms(Collection<Integer>
+                ids) {
         String sql = """
             SELECT * FROM films
             LEFT OUTER JOIN mpa ON films.mpa_id = mpa.mpa_id
@@ -245,16 +258,15 @@ public class FilmRepository implements FilmStorage {
         log.trace("Найти не совпадающие фильмы пользователя id = {} и id = {}", userId, friendId);
         String sql = """
                 SELECT film_id
-                FROM likes 
+                FROM likes
                 WHERE user_id = :friendId
                 AND film_id NOT IN (
                     SELECT film_id FROM likes WHERE user_id = :userId)
                 """;
         MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("friendId", friendId);
+        params.addValue("friend ", friendId);
         params.addValue("userId", userId);
         List<Integer> ids = jdbc.queryForList(sql, params, Integer.class);
-        Collection<Film> films = getFilms(ids);
-        return films;
+        return  getFilms(ids);
     }
 }
