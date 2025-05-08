@@ -40,9 +40,9 @@ public class ReviewsController {
     }
 
     @GetMapping
-    public List<Reviews> getPopularReviews(@RequestParam("filmId")  @Positive Integer filmId,
+    public List<Reviews> getReviewsByFilm(@RequestParam("filmId")  @Positive Integer filmId,
                                     @RequestParam(name = "count", defaultValue = "10") @Positive Integer count) {
-        return reviewsService.getPopularReviews(filmId, count);
+        return reviewsService.getReviewsByFilm(filmId, count);
     }
 
     @PutMapping("/{reviewId}/like/{userId}")

@@ -56,6 +56,7 @@ public class ReviewsRepository implements ReviewsStorage {
 
     @Override
     public Reviews updateReviews(Reviews reviews) {
+        log.info("Запрос на изменения комментария {}", reviews.getReviewId());
         //предполагается, что при обновлении нельзя изменить userID и filmID
         String sql = """
                 UPDATE reviews
@@ -69,7 +70,7 @@ public class ReviewsRepository implements ReviewsStorage {
         paramSource.addValue("isPositive", reviews.getIsPositive());
 
         jdbc.update(sql, paramSource);
-
+        log.debug("Получаем отзыв после обновления");
         String sqlByNewReviews = """
                 WHERE r.reviews_id = :reviews_id
                 GROUP BY r.reviews_id
@@ -80,6 +81,7 @@ public class ReviewsRepository implements ReviewsStorage {
 
     @Override
     public void deleteReviews(Integer id) {
+        log.info("Запрос на удаления отзыва {}", id);
         String sql = """
                 DELETE FROM reviews
                 WHERE reviews_id = :reviews_id
@@ -91,6 +93,7 @@ public class ReviewsRepository implements ReviewsStorage {
 
     @Override
     public Optional<Reviews> getReviewsById(Integer id) {
+        log.info("Запрос на получения отзыва {}", id);
         String sql = """
                 WHERE r.reviews_id = :reviews_id
                 GROUP BY r.reviews_id
@@ -105,7 +108,8 @@ public class ReviewsRepository implements ReviewsStorage {
     }
 
     @Override
-    public List<Reviews> getPopularReviews(Integer filmId, Integer count) {
+    public List<Reviews> getReviewsByFilm(Integer filmId, Integer count) {
+        log.info("Запрос на получение {} отзывов на фильм {}", count, filmId);
         String sql = """
                 WHERE r.film_id = :film_id
                 GROUP BY r.reviews_id
@@ -119,6 +123,7 @@ public class ReviewsRepository implements ReviewsStorage {
 
     @Override
     public void createLikeDislike(Integer id, Integer userId, Integer grade) {
+        log.info("Пользователь {} хочет поставить {} на отзыв {}", userId, grade == 1 ? "лайк" : "дизлайк", id );
         deleteLikeDislike(id, userId, grade == 1 ? -1 : 1);
         String sql = """
                 INSERT INTO likes_reviews (reviews_id, user_id, grade)
@@ -133,6 +138,7 @@ public class ReviewsRepository implements ReviewsStorage {
 
     @Override
     public void deleteLikeDislike(Integer id, Integer userId, Integer grade) {
+        log.info("Пользователь {} хочет удалить {} на отзыв {}", userId, grade == 1 ? "лайк" : "дизлайк", id );
         String sql = """
                 DELETE FROM likes_reviews
                 WHERE (reviews_id = :reviews_id AND user_id = :user_id AND grade = :grade)

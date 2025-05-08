@@ -41,9 +41,9 @@ public class ReviewsService {
     }
 
     @Transactional(readOnly = true)
-    public List<Reviews> getPopularReviews(Integer filmId, Integer count) {
+    public List<Reviews> getReviewsByFilm(Integer filmId, Integer count) {
         checkFilmId(filmId);
-        return reviewsStorage.getPopularReviews(filmId, count);
+        return reviewsStorage.getReviewsByFilm(filmId, count);
     }
 
     public void delete(Integer reviewsId) {
@@ -52,18 +52,26 @@ public class ReviewsService {
     }
 
     public void putLike(Integer reviewsId, Integer userId) {
+        checkReviewsId(reviewsId);
+        checkUserId(userId);
         reviewsStorage.createLikeDislike(reviewsId, userId, GRADE_LIKE);
     }
 
     public void putDislike(Integer reviewsId, Integer userId) {
+        checkReviewsId(reviewsId);
+        checkUserId(userId);
         reviewsStorage.createLikeDislike(reviewsId, userId, GRADE_DISLIKE);
     }
 
     public void deleteLike(Integer reviewsId, Integer userId) {
+        checkReviewsId(reviewsId);
+        checkUserId(userId);
         reviewsStorage.deleteLikeDislike(reviewsId, userId, GRADE_LIKE);
     }
 
     public void deleteDislike(Integer reviewsId, Integer userId) {
+        checkReviewsId(reviewsId);
+        checkUserId(userId);
         reviewsStorage.deleteLikeDislike(reviewsId, userId, GRADE_DISLIKE);
     }
 

@@ -85,6 +85,7 @@ CREATE TABLE IF NOT EXISTS likes_reviews (
     reviews_id INT NOT NULL,
     user_id INT NOT NULL,
     grade INT NOT NULL,
+    PRIMARY KEY(reviews_id, user_id),
     FOREIGN KEY (reviews_id) REFERENCES reviews(reviews_id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
