@@ -93,4 +93,10 @@ public class FilmService {
          userStorage.getUser(userId)
                  .orElseThrow(() -> new NotFoundException("Пользователь id = " + userId + " не существует"));
     }
+
+    public Collection<Film> getCommonFilmsByUsers(Integer userId, Integer friendId) {
+        checkUserExists(userId);
+        checkUserExists(friendId);
+        return filmStorage.getCommonFilmsByUsers(userId, friendId);
+    }
 }

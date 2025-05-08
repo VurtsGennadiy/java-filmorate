@@ -196,4 +196,47 @@ public class FilmRepository implements FilmStorage {
 
         jdbc.update(sql, params);
     }
+
+    @Override
+    public List<Film> getCommonFilmsByUsers(Integer userId, Integer friendId) {
+        log.trace("Найти общие фильмы пользователя id = {} и id = {}", userId, friendId);
+        String sql = """
+    SELECT film_id
+    FROM LIKES
+    WHERE user_id IN (:userId, :friendId)
+    GROUP BY film_id
+    HAVING COUNT(DISTINCT user_id) = 2;
+    """;
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("userId", userId);
+        params.addValue("friendId", friendId);
+
+        List<Integer> ids = jdbc.queryForList(sql, params, Integer.class);
+        return sortByLikes(getFilms(ids));
+    }
+
+    public Collection<Film> getFilms(Collection<Integer> ids) {
+        String sql = """
+            SELECT * FROM films
+            LEFT OUTER JOIN mpa ON films.mpa_id = mpa.mpa_id
+            WHERE film_id IN (:film_ids)""";
+        MapSqlParameterSource params = new MapSqlParameterSource("film_ids", ids);
+        Collection<Film> films = jdbc.query(sql, params, filmRowMapper);
+        connectGenres(films);
+        return films;
+    }
+
+    private List<Film> sortByLikes(Collection<Film> films) {
+        String sql = """
+                SELECT film_id FROM likes
+                WHERE film_id IN (:filmsIds)
+                GROUP BY (film_id)
+                ORDER BY COUNT(user_id) DESC""";
+        Map<Integer, Film> filmsMap = films.stream()
+                .collect(Collectors.toMap(Film::getId, film -> film));
+        MapSqlParameterSource params = new MapSqlParameterSource("filmsIds", filmsMap.keySet());
+
+        List<Integer> sortedFilmsIds = jdbc.queryForList(sql, params, Integer.class);
+        return sortedFilmsIds.stream().map(filmsMap::get).toList();
+    }
 }
