@@ -258,9 +258,9 @@ public class FilmRepository implements FilmStorage {
                     SELECT film_id FROM likes WHERE user_id = :userId)
                 """;
         MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("friend ", friendId);
+        params.addValue("friendId", friendId);
         params.addValue("userId", userId);
         List<Integer> ids = jdbc.queryForList(sql, params, Integer.class);
-        return  getFilms(ids);
+        return getFilms(ids);
     }
 }
