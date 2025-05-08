@@ -239,4 +239,22 @@ public class FilmRepository implements FilmStorage {
         List<Integer> sortedFilmsIds = jdbc.queryForList(sql, params, Integer.class);
         return sortedFilmsIds.stream().map(filmsMap::get).toList();
     }
+
+    @Override
+    public Collection<Film> getRecommendedFilms(Integer userId, Integer friendId) {
+        log.trace("Найти не совпадающие фильмы пользователя id = {} и id = {}", userId, friendId);
+        String sql = """
+                SELECT film_id
+                FROM likes 
+                WHERE user_id = :friendId
+                AND film_id NOT IN (
+                    SELECT film_id FROM likes WHERE user_id = :userId)
+                """;
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("friendId", friendId);
+        params.addValue("userId", userId);
+        List<Integer> ids = jdbc.queryForList(sql, params, Integer.class);
+        Collection<Film> films = getFilms(ids);
+        return films;
+    }
 }
