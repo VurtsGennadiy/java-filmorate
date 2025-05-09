@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -291,6 +292,48 @@ public class FilmRepository implements FilmStorage {
 
         List<Integer> ids = jdbc.queryForList(sql, params, Integer.class);
         return sortByLikes(getFilms(ids));
+    }
+
+    @Override
+    public List<Film> searchFilm(String query, String by) {
+        List<Film> films;
+        String sqlSearch;
+        String sql = """
+                SELECT f.film_id,
+                       f.name,
+                       f.description,
+                       f.release,
+                       f.duration,
+                       f.mpa_id,
+                       mpa.name,
+                       d.name
+                FROM films AS f
+                LEFT OUTER JOIN mpa ON f.mpa_id = mpa.mpa_id
+                LEFT OUTER JOIN film_director ON f.film_id = film_director.film_id
+                LEFT OUTER JOIN directors AS d ON film_director.director_id = d.director_id
+                """;
+        if (by.contains("director") && by.contains("title")) {
+            sqlSearch = """
+                    WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.name) LIKE LOWER(CONCAT('%', :query, '%'))
+                    """;
+        } else if (by.contains("director")) {
+            sqlSearch = """
+                    WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', :query, '%'))
+                    """;
+
+        } else if (by.contains("title")) {
+            sqlSearch = """
+                    WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', :query, '%'))
+                    """;
+        } else {
+            throw new NotFoundException("Некорректное значение параметра by, поиск может осуществлять только по " +
+                    "режиссёрам, либо на названиям");
+        }
+        MapSqlParameterSource params = new MapSqlParameterSource("query", query);
+        films = jdbc.query(sql + sqlSearch, params, filmRowMapper);
+        connectGenres(films);
+        connectDirectors(films);
+        return films;
     }
 
     private List<Film> sortByLikes(Collection<Film> films) {
