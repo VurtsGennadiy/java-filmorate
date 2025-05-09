@@ -99,12 +99,10 @@ public class FilmRepository implements FilmStorage {
 
     @Override
     public Optional<Film> getFilm(Integer id) {
-        String sql =
-                """
-            SELECT
-                * FROM films
+        String sql = """
+            SELECT * FROM films
             LEFT OUTER JOIN mpa ON
-                films.mpa_id = mpa.mpa_id
+            films.mpa_id = mpa.mpa_id
             WHERE film_id = :film_id""";
         MapSqlParameterSource params = new MapSqlParameterSource("film_id", id);
 
@@ -118,8 +116,7 @@ public class FilmRepository implements FilmStorage {
     }
 
     @Override
-    public Collection<Film>
-                getFilms() {
+    public Collection<Film> getFilms() {
                 String sql = """
             SELECT * FROM films
             LEFT OUTER JOIN mpa ON films.mpa_id = mpa.mpa_id""";
@@ -144,10 +141,8 @@ public class FilmRepository implements FilmStorage {
         return films;
     }
 
-    private void connectGenres(Collection<
-                Film> films) {
-        String
-                selectGenresSQL = """
+    private void connectGenres(Collection<Film> films) {
+        String selectGenresSQL = """
                SELECT * FROM
                 film_genre AS fg
                LEFT JOIN genres ON fg.genre_id = genres.genre_id
@@ -206,7 +201,7 @@ public class FilmRepository implements FilmStorage {
 
     @Override
     public List<Film> getCommonFilmsByUsers(Integer userId, Integer friendId) {
-                log.trace("Найти общие фильмы полтеля id = {} и id = {}", userId, friendId);
+        log.trace("Найти общие фильмы пользователя id = {} и id = {}", userId, friendId);
         String sql = """
     SELECT film_id
     FROM LIKES
@@ -239,7 +234,7 @@ public class FilmRepository implements FilmStorage {
                 WHERE film_id IN (:filmsIds)
                 GROUP BY (film_id)
                 ORDER BY COUNT(user_id) DESC""";
-        Map<Integer,Film> filmsMap = films.stream()
+        Map<Integer, Film> filmsMap = films.stream()
                 .collect(Collectors.toMap(Film::getId, film -> film));
         MapSqlParameterSource params = new MapSqlParameterSource("filmsIds", filmsMap.keySet());
 
