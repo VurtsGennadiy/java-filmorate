@@ -25,4 +25,6 @@ public interface FilmStorage {
     List<Film> getPopular(int limit);
 
     List<Film> getCommonFilmsByUsers(Integer userId,  Integer friendId);
+
+    Collection<Film> getRecommendedFilms(Integer userId, Integer friendId);
 }
