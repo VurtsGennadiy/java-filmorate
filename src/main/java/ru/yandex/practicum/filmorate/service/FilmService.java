@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.*;
@@ -21,6 +22,7 @@ public class FilmService {
     private final MPAStorage mpaStorage;
     private final GenreStorage genreStorage;
     private final DirectorStorage directorStorage;
+    private final EventService eventService;
 
     public Film create(Film film) {
         if (film.getMpa() != null) {
@@ -64,12 +66,14 @@ public class FilmService {
         checkFilmExists(filmId);
         checkUserExists(userId);
         filmStorage.addLike(filmId, userId);
+        eventService.createEvent(userId, Event.EventType.LIKE, Event.Operation.ADD, filmId);
     }
 
     public void removeLike(Integer filmId, Integer userId) {
         checkFilmExists(filmId);
         checkUserExists(userId);
         filmStorage.removeLike(filmId, userId);
+        eventService.createEvent(userId, Event.EventType.LIKE, Event.Operation.REMOVE, filmId);
     }
 
     public Collection<Film> getPopular(Integer count) {
