@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
+import java.util.List;
 
 @RestController
 @RequestMapping("/films")
@@ -66,5 +67,10 @@ public class FilmController {
     @GetMapping("/common")
     public Collection<Film> getCommonFilmsByUsers(@RequestParam Integer userId, @RequestParam Integer friendId) {
         return filmService.getCommonFilmsByUsers(userId, friendId);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<Film> getFilmsByDirector(@PathVariable int directorId, @RequestParam String sortBy) {
+        return filmService.getFilmsByDirector(directorId, sortBy);
     }
 }

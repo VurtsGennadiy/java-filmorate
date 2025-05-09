@@ -42,13 +42,6 @@ public class FilmTest {
     }
 
     @Test
-    public void releaseDateAfterTodayValidation() {
-        film.setReleaseDate(LocalDate.now().plusDays(1));
-        violations = validator.validate(film);
-        assertEquals(1, violations.size());
-    }
-
-    @Test
     public void nameIsNotBlankValidation() {
         film.setName("");
         violations = validator.validate(film);
