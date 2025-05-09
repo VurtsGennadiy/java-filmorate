@@ -14,6 +14,10 @@ public interface FilmStorage {
 
     Collection<Film> getFilms();
 
+    Collection<Film> getFilms(Collection<Integer> ids);
+
+    List<Film> getFilmsByDirector(int directorId, String sortBy);
+
     void addLike(Integer filmId, Integer userId);
 
     void removeLike(Integer filmId, Integer userId);
