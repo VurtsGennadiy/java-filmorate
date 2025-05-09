@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -44,6 +45,7 @@ public class FilmRepository implements FilmStorage {
         if (!film.getGenres().isEmpty()) {
             saveFilmGenres(film);
         }
+        saveFilmDirectors(film);
         log.info("Создан новый фильм id = {}", film.getId());
         return film;
     }
@@ -69,7 +71,9 @@ public class FilmRepository implements FilmStorage {
 
         jdbc.update(sql, params);
         clearFilmGenres(film);
+        clearFilmDirectors(film);
         saveFilmGenres(film);
+        saveFilmDirectors(film);
         log.info("Обновлены данные фильма id = {}", film.getId());
         return film;
     }
@@ -90,11 +94,35 @@ public class FilmRepository implements FilmStorage {
         log.trace("Сохранены жанры фильма id = {}", film.getId());
     }
 
+    private void saveFilmDirectors(Film film) {
+        if (film.getDirectors().isEmpty()) return;
+        String sql = """
+                INSERT INTO film_director (film_id, director_id)
+                VALUES (:film_id, :director_id)""";
+        MapSqlParameterSource[] batchArgs = film.getDirectors().stream()
+                .map(director -> {
+                    MapSqlParameterSource params = new MapSqlParameterSource();
+                    params.addValue("film_id", film.getId());
+                    params.addValue("director_id", director.getId());
+                    return params;
+                })
+                .toArray(MapSqlParameterSource[]::new);
+        jdbc.batchUpdate(sql, batchArgs);
+        log.trace("Сохранены режиссёры фильма id = {}", film.getId());
+    }
+
     private void clearFilmGenres(Film film) {
         String clearFilmGenresSql = "DELETE from film_genre WHERE film_id = :film_id";
         MapSqlParameterSource params = new MapSqlParameterSource("film_id", film.getId());
         jdbc.update(clearFilmGenresSql, params);
         log.trace("Очищены жанры фильма id = {}", film.getId());
+    }
+
+    private void clearFilmDirectors(Film film) {
+        String sql = "DELETE FROM film_director WHERE film_id = :film_id";
+        MapSqlParameterSource params = new MapSqlParameterSource("film_id", film.getId());
+        jdbc.update(sql, params);
+        log.trace("Очищены режиссёры фильма id = {}", film.getId());
     }
 
     @Override
@@ -109,6 +137,7 @@ public class FilmRepository implements FilmStorage {
         try {
             Film film = jdbc.queryForObject(sql, params, filmRowMapper);
             connectGenres(List.of(film));
+            connectDirectors(List.of(film));
             return Optional.of(film);
         } catch (EmptyResultDataAccessException emptyResult) {
             return Optional.empty();
@@ -122,6 +151,19 @@ public class FilmRepository implements FilmStorage {
             LEFT OUTER JOIN mpa ON films.mpa_id = mpa.mpa_id""";
         Collection<Film> films = jdbc.query(sql, filmRowMapper);
         connectGenres(films);
+        connectDirectors(films);
+        return films;
+    }
+
+    public Collection<Film> getFilms(Collection<Integer> ids) {
+        String sql = """
+            SELECT * FROM films
+            LEFT OUTER JOIN mpa ON films.mpa_id = mpa.mpa_id
+            WHERE film_id IN (:film_ids)""";
+        MapSqlParameterSource params = new MapSqlParameterSource("film_ids", ids);
+        Collection<Film> films = jdbc.query(sql, params, filmRowMapper);
+        connectGenres(films);
+        connectDirectors(films);
         return films;
     }
 
@@ -138,7 +180,23 @@ public class FilmRepository implements FilmStorage {
         MapSqlParameterSource params = new MapSqlParameterSource("limit", limit);
         List<Film> films = jdbc.query(sql, params, filmRowMapper);
         connectGenres(films);
+        connectDirectors(films);
         return films;
+    }
+
+    public List<Film> getFilmsByDirector(int directorId, String sortBy) {
+        String sql = "SELECT film_id FROM film_director WHERE director_id = :director_id";
+        MapSqlParameterSource params = new MapSqlParameterSource("director_id", directorId);
+        List<Integer> filmsIds = jdbc.queryForList(sql, params, Integer.class);
+        Collection<Film> films = getFilms(filmsIds);
+
+        if ("likes".equals(sortBy)) {
+            return sortByLikes(films);
+        } else if ("year".equals(sortBy)) {
+            return sortByYear(films);
+        }
+
+        return new ArrayList<>(films);
     }
 
     private void connectGenres(Collection<Film> films) {
@@ -160,6 +218,27 @@ public class FilmRepository implements FilmStorage {
             String genreName = rs.getString("name");
             Genre genre = new Genre(genreId, genreName);
             filmsMap.get(filmId).getGenres().add(genre);
+        }
+    }
+
+    private void connectDirectors(Collection<Film> films) {
+        String selectDirectorsSQL = """
+                SELECT * FROM film_director AS fd
+                LEFT JOIN directors ON fd.director_id = directors.director_id
+                WHERE film_id IN (:film_ids)""";
+        List<Integer> filmIds = films.stream().map(Film::getId).toList();
+        MapSqlParameterSource params = new MapSqlParameterSource("film_ids", filmIds);
+        SqlRowSet rs = jdbc.queryForRowSet(selectDirectorsSQL, params);
+
+        Map<Integer, Film> filmsMap = films.stream()
+                .collect(Collectors.toMap(Film::getId, film -> film));
+
+        while (rs.next()) {
+            int filmId = rs.getInt("film_id");
+            int directorId = rs.getInt("director_id");
+            String directorName = rs.getString("name");
+            Director director = new Director(directorId, directorName);
+            filmsMap.get(filmId).getDirectors().add(director);
         }
     }
 
@@ -203,29 +282,17 @@ public class FilmRepository implements FilmStorage {
     public List<Film> getCommonFilmsByUsers(Integer userId, Integer friendId) {
         log.trace("Найти общие фильмы пользователя id = {} и id = {}", userId, friendId);
         String sql = """
-    SELECT film_id
-    FROM LIKES
-    WHERE user_id IN (:userId, :friendId)
-    GROUP BY film_id
-    HAVING COUNT(DISTINCT user_id) = 2;
-    """;
+                SELECT film_id
+                FROM likes
+                WHERE user_id IN (:userId, :friendId)
+                GROUP BY film_id
+                HAVING COUNT(DISTINCT user_id) = 2""";
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("userId", userId);
         params.addValue("friendId", friendId);
 
         List<Integer> ids = jdbc.queryForList(sql, params, Integer.class);
         return sortByLikes(getFilms(ids));
-    }
-
-    public Collection<Film> getFilms(Collection<Integer> ids) {
-        String sql = """
-            SELECT * FROM films
-            LEFT OUTER JOIN mpa ON films.mpa_id = mpa.mpa_id
-            WHERE film_id IN (:film_ids)""";
-        MapSqlParameterSource params = new MapSqlParameterSource("film_ids", ids);
-        Collection<Film> films = jdbc.query(sql, params, filmRowMapper);
-        connectGenres(films);
-        return films;
     }
 
     private List<Film> sortByLikes(Collection<Film> films) {
@@ -242,6 +309,7 @@ public class FilmRepository implements FilmStorage {
         return sortedFilmsIds.stream().map(filmsMap::get).toList();
     }
 
+
     @Override
     public Collection<Film> getRecommendedFilms(Integer userId, Integer friendId) {
         log.trace("Найти не совпадающие фильмы пользователя id = {} и id = {}", userId, friendId);
@@ -257,5 +325,11 @@ public class FilmRepository implements FilmStorage {
         params.addValue("userId", userId);
         List<Integer> ids = jdbc.queryForList(sql, params, Integer.class);
         return getFilms(ids);
+    }
+  
+    private List<Film> sortByYear(Collection<Film> films) {
+        List<Film> sortedFilms = new ArrayList<>(films);
+        sortedFilms.sort(Comparator.comparing(Film::getReleaseDate));
+        return sortedFilms;
     }
 }

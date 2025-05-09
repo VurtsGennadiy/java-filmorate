@@ -23,12 +23,12 @@ public class Film {
     @Size(max = 200)
     private String description;
 
-    @PastOrPresent
     @SinceDate(CINEMA_DAY)
     private LocalDate releaseDate;
 
     @Positive
     private Integer duration;
-    private Set<Genre> genres = new HashSet<>();
     private MPA mpa;
+    private Set<Genre> genres = new HashSet<>();
+    private Set<Director> directors = new HashSet<>();
 }
