@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.storage.EventStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.Instant;
 import java.util.Collection;
@@ -41,7 +40,7 @@ public class EventService {
     }
 
     private void checkUserById(Integer userId) {
-        eventStorage.checkUserById(userId).
-                orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не существует"));
+        eventStorage.checkUserById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не существует"));
     }
 }
