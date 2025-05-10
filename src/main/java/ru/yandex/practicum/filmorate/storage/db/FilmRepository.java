@@ -324,9 +324,7 @@ public class FilmRepository implements FilmStorage {
         }
         MapSqlParameterSource params = new MapSqlParameterSource("query", query);
         List<Integer> filmsId = jdbc.queryForList(sql + sqlSearch, params, Integer.class);
-        List<Film> films = new ArrayList<>(getFilms(filmsId));
-        sortByLikes(films);
-        return films;
+        return sortByLikes(getFilms(filmsId));
     }
 
     private List<Film> sortByLikes(Collection<Film> films) {
