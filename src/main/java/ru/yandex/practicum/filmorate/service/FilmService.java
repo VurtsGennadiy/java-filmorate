@@ -76,6 +76,10 @@ public class FilmService {
         return filmStorage.getPopular(count);
     }
 
+    public List<Film> searchFilms(String query, String by) {
+        return filmStorage.searchFilm(query, by);
+    }
+
     private void checkMpaExists(int mpaId) {
         mpaStorage.getById(mpaId)
                 .orElseThrow(() -> new NotFoundException("Рейтинг MPA id = " + mpaId + " не существует"));

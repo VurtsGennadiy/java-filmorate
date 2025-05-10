@@ -77,7 +77,9 @@ public class DirectorRepository implements DirectorStorage {
 
     @Override
     public Collection<Director> getDirectors() {
-        String sql = "SELECT * FROM directors";
+        String sql = """
+            SELECT * FROM directors
+            ORDER BY director_id""";
         return jdbc.query(sql, directorRowMapper);
     }
 

@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -291,6 +292,39 @@ public class FilmRepository implements FilmStorage {
 
         List<Integer> ids = jdbc.queryForList(sql, params, Integer.class);
         return sortByLikes(getFilms(ids));
+    }
+
+    @Override
+    public List<Film> searchFilm(String query, String by) {
+        String sqlSearch;
+        String sql = """
+                SELECT DISTINCT f.film_id,
+                FROM films AS f
+                """;
+        if (by.contains("director") && by.contains("title")) {
+            sqlSearch = """
+                    LEFT OUTER JOIN film_director ON f.film_id = film_director.film_id
+                    LEFT OUTER JOIN directors AS d ON film_director.director_id = d.director_id
+                    WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.name) LIKE LOWER(CONCAT('%', :query, '%'))
+                    """;
+        } else if (by.contains("director")) {
+            sqlSearch = """
+                    LEFT OUTER JOIN film_director ON f.film_id = film_director.film_id
+                    LEFT OUTER JOIN directors AS d ON film_director.director_id = d.director_id
+                    WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', :query, '%'))
+                    """;
+
+        } else if (by.contains("title")) {
+            sqlSearch = """
+                    WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', :query, '%'))
+                    """;
+        } else {
+            throw new NotFoundException("Некорректное значение параметра by, поиск может осуществлять только по " +
+                    "режиссёрам, либо на названиям");
+        }
+        MapSqlParameterSource params = new MapSqlParameterSource("query", query);
+        List<Integer> filmsId = jdbc.queryForList(sql + sqlSearch, params, Integer.class);
+        return sortByLikes(getFilms(filmsId));
     }
 
     private List<Film> sortByLikes(Collection<Film> films) {
