@@ -296,28 +296,21 @@ public class FilmRepository implements FilmStorage {
 
     @Override
     public List<Film> searchFilm(String query, String by) {
-        List<Film> films;
         String sqlSearch;
         String sql = """
-                SELECT f.film_id,
-                       f.name,
-                       f.description,
-                       f.release,
-                       f.duration,
-                       f.mpa_id,
-                       mpa.name,
-                       d.name
+                SELECT DISTINCT f.film_id,
                 FROM films AS f
-                LEFT OUTER JOIN mpa ON f.mpa_id = mpa.mpa_id
-                LEFT OUTER JOIN film_director ON f.film_id = film_director.film_id
-                LEFT OUTER JOIN directors AS d ON film_director.director_id = d.director_id
                 """;
         if (by.contains("director") && by.contains("title")) {
             sqlSearch = """
+                    LEFT OUTER JOIN film_director ON f.film_id = film_director.film_id
+                    LEFT OUTER JOIN directors AS d ON film_director.director_id = d.director_id
                     WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.name) LIKE LOWER(CONCAT('%', :query, '%'))
                     """;
         } else if (by.contains("director")) {
             sqlSearch = """
+                    LEFT OUTER JOIN film_director ON f.film_id = film_director.film_id
+                    LEFT OUTER JOIN directors AS d ON film_director.director_id = d.director_id
                     WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', :query, '%'))
                     """;
 
@@ -330,9 +323,9 @@ public class FilmRepository implements FilmStorage {
                     "режиссёрам, либо на названиям");
         }
         MapSqlParameterSource params = new MapSqlParameterSource("query", query);
-        films = jdbc.query(sql + sqlSearch, params, filmRowMapper);
-        connectGenres(films);
-        connectDirectors(films);
+        List<Integer> filmsId = jdbc.queryForList(sql + sqlSearch, params, Integer.class);
+        List<Film> films = new ArrayList<>(getFilms(filmsId));
+        sortByLikes(films);
         return films;
     }
 
@@ -347,7 +340,12 @@ public class FilmRepository implements FilmStorage {
         MapSqlParameterSource params = new MapSqlParameterSource("filmsIds", filmsMap.keySet());
 
         List<Integer> sortedFilmsIds = jdbc.queryForList(sql, params, Integer.class);
-        return sortedFilmsIds.stream().map(filmsMap::get).toList();
+        LinkedHashSet<Film> sortedFilms = new LinkedHashSet<>(
+                sortedFilmsIds.stream()
+                        .map(filmsMap::get)
+                        .toList());
+        sortedFilms.addAll(films);
+        return new ArrayList<>(sortedFilms);
     }
 
     private List<Film> sortByYear(Collection<Film> films) {
