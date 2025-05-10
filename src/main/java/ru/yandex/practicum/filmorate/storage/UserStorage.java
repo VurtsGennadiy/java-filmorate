@@ -20,4 +20,6 @@ public interface UserStorage {
     Collection<User> getUsers();
 
     Collection<User> getUsers(List<Integer> ids);
+
+    Integer getMaxCommonLikesUser(Integer userId);
 }
