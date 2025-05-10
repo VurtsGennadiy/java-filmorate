@@ -304,7 +304,12 @@ public class FilmRepository implements FilmStorage {
         MapSqlParameterSource params = new MapSqlParameterSource("filmsIds", filmsMap.keySet());
 
         List<Integer> sortedFilmsIds = jdbc.queryForList(sql, params, Integer.class);
-        return sortedFilmsIds.stream().map(filmsMap::get).toList();
+        LinkedHashSet<Film> sortedFilms = new LinkedHashSet<>(
+                sortedFilmsIds.stream()
+                        .map(filmsMap::get)
+                        .toList());
+        sortedFilms.addAll(films);
+        return new ArrayList<>(sortedFilms);
     }
 
     private List<Film> sortByYear(Collection<Film> films) {
