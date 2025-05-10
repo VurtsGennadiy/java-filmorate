@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.storage.db;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
@@ -14,7 +13,6 @@ import ru.yandex.practicum.filmorate.storage.EventStorage;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 
 @Repository
@@ -61,21 +59,5 @@ public class EventRepository implements EventStorage {
             return List.of();
         }
         return eventFeed;
-    }
-
-    @Override
-    public Optional<Integer> checkUserById(Integer userId) {
-        final String sql = """
-                SELECT user_id
-                FROM users
-                WHERE user_id = :user_id;
-                """;
-
-        MapSqlParameterSource params = new MapSqlParameterSource("user_id", userId);
-        try {
-            return Optional.ofNullable(jdbc.queryForObject(sql, params, Integer.class));
-        } catch (EmptyResultDataAccessException ignored) {
-            return Optional.empty();
-        }
     }
 }

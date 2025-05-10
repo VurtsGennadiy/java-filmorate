@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.storage.EventStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.Instant;
 import java.util.Collection;
@@ -17,6 +18,7 @@ import java.util.Collections;
 @Slf4j
 public class EventService {
     private final EventStorage eventStorage;
+    private final UserStorage userStorage;
 
     public void createEvent(Integer userId, Event.EventType type, Event.Operation operation, Integer entityId) {
         Event event = Event.of(
@@ -40,7 +42,7 @@ public class EventService {
     }
 
     private void checkUserById(Integer userId) {
-        eventStorage.checkUserById(userId)
+        userStorage.getUser(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не существует"));
     }
 }
