@@ -172,10 +172,11 @@ public class FilmRepositoryTest {
     @Test
     @DisplayName("топ популярных фильмов")
     void getPopular() {
-        assertThat(filmRepository.getPopular(1)).isEqualTo(List.of(testFilm1));
+        assertThat(filmRepository.getPopular(1, null, null)).isEqualTo(List.of(testFilm1));
 
         filmRepository.addLike(2, 1);
         filmRepository.addLike(2, 2);
-        assertThat(filmRepository.getPopular(2)).isEqualTo(List.of(testFilm2, testFilm1));
+        assertThat(filmRepository.getPopular(2, null, null))
+                .isEqualTo(List.of(testFilm2, testFilm1));
     }
 }
