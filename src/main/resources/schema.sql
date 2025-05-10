@@ -103,3 +103,13 @@ CREATE TABLE IF NOT EXISTS likes_reviews (
     FOREIGN KEY (reviews_id) REFERENCES reviews(reviews_id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS events (
+    event_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    event_type VARCHAR(20) NOT NULL,
+    operation VARCHAR(20) NOT NULL,
+    event_timestamp BIGINT NOT NULL,
+    entity_id INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);

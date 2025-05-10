@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Reviews;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.ReviewsStorage;
@@ -20,6 +21,7 @@ public class ReviewsService {
     private final ReviewsStorage reviewsStorage;
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
+    private final EventService eventService;
 
     private static final int GRADE_LIKE = 1;
     private static final int GRADE_DISLIKE = -1;
@@ -27,11 +29,17 @@ public class ReviewsService {
     public Reviews create(Reviews reviews) {
         checkUserId(reviews.getUserId());
         checkFilmId(reviews.getFilmId());
-        return reviewsStorage.createReviews(reviews);
+        Reviews createdReviews = reviewsStorage.createReviews(reviews);
+        eventService.createEvent(createdReviews.getUserId(), Event.EventType.REVIEW, Event.Operation.ADD,
+                createdReviews.getReviewId());
+        return createdReviews;
     }
 
     public Reviews update(Reviews reviews) {
-        return reviewsStorage.updateReviews(reviews);
+        Reviews updatedReviews = reviewsStorage.updateReviews(reviews);
+        eventService.createEvent(updatedReviews.getUserId(), Event.EventType.REVIEW, Event.Operation.UPDATE,
+                updatedReviews.getReviewId());
+        return updatedReviews;
     }
 
     @Transactional(readOnly = true)
@@ -48,7 +56,9 @@ public class ReviewsService {
 
     public void delete(Integer reviewsId) {
         checkReviewsId(reviewsId);
+        Reviews reviews = getReviewsById(reviewsId);
         reviewsStorage.deleteReviews(reviewsId);
+        eventService.createEvent(reviews.getUserId(), Event.EventType.REVIEW, Event.Operation.REMOVE, reviewsId);
     }
 
     public void putLike(Integer reviewsId, Integer userId) {
