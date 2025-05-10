@@ -114,4 +114,25 @@ public class UserRepository implements UserStorage {
         String sql = String.format("SELECT * FROM users WHERE user_id IN (%s)", idJoiner);
         return jdbc.query(sql, userRowMapper);
     }
+
+    @Override
+    public Integer getMaxCommonLikesUser(Integer userId) {
+        String sql = """
+                SELECT u.*, COUNT(*) AS common_likes
+                FROM likes AS l1
+                JOIN likes AS l2 ON l1.film_id = l2.film_id AND l1.user_id = :userId AND l2.user_id <> :userId
+                LEFT JOIN users AS u ON l2.user_id = u.user_id
+                GROUP BY u.user_id
+                ORDER BY common_likes DESC
+                LIMIT 1
+                """;
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("userId", userId);
+
+        List<User> users = jdbc.query(sql, params, userRowMapper);
+        if (users.isEmpty()) {
+            return -1;
+        }
+        return users.get(0).getId();
+    }
 }
