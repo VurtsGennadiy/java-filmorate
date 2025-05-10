@@ -56,7 +56,7 @@ public class FilmService {
     }
 
     public List<Film> getFilmsByDirector(int directorId, String sortBy) {
-        directorStorage.getDirector(directorId);
+        checkDirectorExists(directorId);
         return filmStorage.getFilmsByDirector(directorId, sortBy);
     }
 
@@ -78,6 +78,12 @@ public class FilmService {
 
     public List<Film> searchFilms(String query, String by) {
         return filmStorage.searchFilm(query, by);
+    }
+
+    public Collection<Film> getCommonFilmsByUsers(Integer userId, Integer friendId) {
+        checkUserExists(userId);
+        checkUserExists(friendId);
+        return filmStorage.getCommonFilmsByUsers(userId, friendId);
     }
 
     private void checkMpaExists(int mpaId) {
@@ -105,6 +111,11 @@ public class FilmService {
         }
     }
 
+    private void checkDirectorExists(int directorId) {
+        directorStorage.getDirector(directorId)
+                .orElseThrow(() -> new NotFoundException("Режиссёр id = " + directorId + " не существует"));
+    }
+
     private void checkFilmExists(int id) {
         filmStorage.getFilm(id)
                 .orElseThrow(() -> new NotFoundException("Фильм id = " + id + " не существует"));
@@ -113,11 +124,5 @@ public class FilmService {
     private void checkUserExists(int userId) {
          userStorage.getUser(userId)
                  .orElseThrow(() -> new NotFoundException("Пользователь id = " + userId + " не существует"));
-    }
-
-    public Collection<Film> getCommonFilmsByUsers(Integer userId, Integer friendId) {
-        checkUserExists(userId);
-        checkUserExists(friendId);
-        return filmStorage.getCommonFilmsByUsers(userId, friendId);
     }
 }
