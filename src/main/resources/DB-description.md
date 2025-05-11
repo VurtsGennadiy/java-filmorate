@@ -62,6 +62,14 @@
 * _user_id_, int, NOT NULL - составной первичный ключ, внешний ключ (ссылается на user.user_id)
 * _grade_, int, NOT NULL - оценка (1 если лайк и -1 для дизлайка)
 
+**events** - события на платформе: добавление/удаление друзей, лайки и отзывы на фильмы
+* _event_id_, int, NOT NULL - primary key
+* _user_id_, int, NOT NULL -  внешний ключ (ссылается на user.user_id)
+* _event_type_, varchar(20), NOT NULL - тип события: LIKE, REVIEW, FRIEND
+* _operation_, varchar(20), NOT NULL - действие: REMOVE, ADD, UPDATE
+* _event_timestamp_, bigint, NOT NULL - время когда случилось событие
+* _entity_id_, int, NOT NULL - сущность с которой произошло событие
+
 ## Примеры запросов
 - Получение всех фильмов
 ```dbn-psql

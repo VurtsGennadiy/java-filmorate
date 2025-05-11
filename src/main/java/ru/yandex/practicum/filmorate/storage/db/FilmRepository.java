@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -167,19 +168,42 @@ public class FilmRepository implements FilmStorage {
     }
 
     @Override
-    public List<Film> getPopular(int limit) {
-        String sql = """
-                SELECT * FROM films
-                LEFT OUTER JOIN mpa ON films.mpa_id = mpa.mpa_id
-                WHERE film_id IN (
-                    SELECT film_id FROM likes
-                    GROUP BY film_id
-                    ORDER BY COUNT(user_id) DESC)
-                LIMIT :limit""";
-        MapSqlParameterSource params = new MapSqlParameterSource("limit", limit);
-        List<Film> films = jdbc.query(sql, params, filmRowMapper);
-        connectGenres(films);
-        connectDirectors(films);
+    public List<Film> getPopular(Integer count, Integer genreId, Integer year) {
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        StringBuilder sql = new StringBuilder("""
+        SELECT f.film_id
+        FROM films f
+        LEFT JOIN film_genre fg ON f.film_id = fg.film_id
+        LEFT JOIN likes l ON f.film_id = l.film_id
+        WHERE 1=1
+    """);
+
+        if (genreId != null) {
+            sql.append(" AND fg.genre_id = :genreId");
+            params.addValue("genreId", genreId);
+        }
+        if (year != null) {
+            sql.append(" AND EXTRACT(YEAR FROM f.release) = :year");
+            params.addValue("year", year);
+        }
+        sql.append(" GROUP BY f.film_id ORDER BY COUNT(l.user_id) DESC");
+        if (count != null) {
+            sql.append(" LIMIT :count");
+            params.addValue("count", count);
+        }
+
+        List<Integer> filmIds = jdbc.queryForList(sql.toString(), params, Integer.class);
+
+        if (filmIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        MapSqlParameterSource paramsFilms = new MapSqlParameterSource();
+        paramsFilms.addValue("filmIds", filmIds);
+
+        List<Film> films = (List<Film>) getFilms(filmIds);
+        films.sort(Comparator.comparingInt(f -> filmIds.indexOf(f.getId())));
+
         return films;
     }
 
@@ -293,6 +317,39 @@ public class FilmRepository implements FilmStorage {
         return sortByLikes(getFilms(ids));
     }
 
+    @Override
+    public List<Film> searchFilm(String query, String by) {
+        String sqlSearch;
+        String sql = """
+                SELECT DISTINCT f.film_id,
+                FROM films AS f
+                """;
+        if (by.contains("director") && by.contains("title")) {
+            sqlSearch = """
+                    LEFT OUTER JOIN film_director ON f.film_id = film_director.film_id
+                    LEFT OUTER JOIN directors AS d ON film_director.director_id = d.director_id
+                    WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.name) LIKE LOWER(CONCAT('%', :query, '%'))
+                    """;
+        } else if (by.contains("director")) {
+            sqlSearch = """
+                    LEFT OUTER JOIN film_director ON f.film_id = film_director.film_id
+                    LEFT OUTER JOIN directors AS d ON film_director.director_id = d.director_id
+                    WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', :query, '%'))
+                    """;
+
+        } else if (by.contains("title")) {
+            sqlSearch = """
+                    WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', :query, '%'))
+                    """;
+        } else {
+            throw new NotFoundException("Некорректное значение параметра by, поиск может осуществлять только по " +
+                    "режиссёрам, либо на названиям");
+        }
+        MapSqlParameterSource params = new MapSqlParameterSource("query", query);
+        List<Integer> filmsId = jdbc.queryForList(sql + sqlSearch, params, Integer.class);
+        return sortByLikes(getFilms(filmsId));
+    }
+
     private List<Film> sortByLikes(Collection<Film> films) {
         String sql = """
                 SELECT film_id FROM likes
@@ -304,7 +361,12 @@ public class FilmRepository implements FilmStorage {
         MapSqlParameterSource params = new MapSqlParameterSource("filmsIds", filmsMap.keySet());
 
         List<Integer> sortedFilmsIds = jdbc.queryForList(sql, params, Integer.class);
-        return sortedFilmsIds.stream().map(filmsMap::get).toList();
+        LinkedHashSet<Film> sortedFilms = new LinkedHashSet<>(
+                sortedFilmsIds.stream()
+                        .map(filmsMap::get)
+                        .toList());
+        sortedFilms.addAll(films);
+        return new ArrayList<>(sortedFilms);
     }
 
     private List<Film> sortByYear(Collection<Film> films) {

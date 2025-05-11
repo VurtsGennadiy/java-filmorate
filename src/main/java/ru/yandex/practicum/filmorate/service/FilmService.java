@@ -1,9 +1,12 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.*;
@@ -15,12 +18,14 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
     private final MPAStorage mpaStorage;
     private final GenreStorage genreStorage;
     private final DirectorStorage directorStorage;
+    private final EventService eventService;
 
     public Film create(Film film) {
         if (film.getMpa() != null) {
@@ -56,24 +61,44 @@ public class FilmService {
     }
 
     public List<Film> getFilmsByDirector(int directorId, String sortBy) {
-        directorStorage.getDirector(directorId);
+        checkDirectorExists(directorId);
         return filmStorage.getFilmsByDirector(directorId, sortBy);
     }
 
     public void addLike(Integer filmId, Integer userId) {
         checkFilmExists(filmId);
         checkUserExists(userId);
-        filmStorage.addLike(filmId, userId);
+        try {
+            filmStorage.addLike(filmId, userId);
+        } catch (DuplicateKeyException ignored) {
+            log.info("Пользователь с id = {} уже добалял лайк фильму с id = {} ", userId, filmId);
+        }
+        eventService.createEvent(userId, Event.EventType.LIKE, Event.Operation.ADD, filmId);
     }
 
     public void removeLike(Integer filmId, Integer userId) {
         checkFilmExists(filmId);
         checkUserExists(userId);
         filmStorage.removeLike(filmId, userId);
+        eventService.createEvent(userId, Event.EventType.LIKE, Event.Operation.REMOVE, filmId);
     }
 
     public Collection<Film> getPopular(Integer count) {
-        return filmStorage.getPopular(count);
+        return filmStorage.getPopular(count, null, null);
+    }
+
+    public Collection<Film> getPopularByGenreAndYear(Integer count, Integer genreId, Integer year) {
+        return filmStorage.getPopular(count, genreId, year);
+    }
+
+    public List<Film> searchFilms(String query, String by) {
+        return filmStorage.searchFilm(query, by);
+    }
+
+    public Collection<Film> getCommonFilmsByUsers(Integer userId, Integer friendId) {
+        checkUserExists(userId);
+        checkUserExists(friendId);
+        return filmStorage.getCommonFilmsByUsers(userId, friendId);
     }
 
     private void checkMpaExists(int mpaId) {
@@ -101,19 +126,18 @@ public class FilmService {
         }
     }
 
+    private void checkDirectorExists(int directorId) {
+        directorStorage.getDirector(directorId)
+                .orElseThrow(() -> new NotFoundException("Режиссёр id = " + directorId + " не существует"));
+    }
+
     private void checkFilmExists(int id) {
         filmStorage.getFilm(id)
                 .orElseThrow(() -> new NotFoundException("Фильм id = " + id + " не существует"));
     }
 
     private void checkUserExists(int userId) {
-         userStorage.getUser(userId)
-                 .orElseThrow(() -> new NotFoundException("Пользователь id = " + userId + " не существует"));
-    }
-
-    public Collection<Film> getCommonFilmsByUsers(Integer userId, Integer friendId) {
-        checkUserExists(userId);
-        checkUserExists(friendId);
-        return filmStorage.getCommonFilmsByUsers(userId, friendId);
+        userStorage.getUser(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь id = " + userId + " не существует"));
     }
 }

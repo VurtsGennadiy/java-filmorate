@@ -17,6 +17,8 @@ public interface ReviewsStorage {
 
     List<Reviews> getReviewsByFilm(Integer filmId, Integer count);
 
+    List<Reviews> getAllFilmsReviews(Integer count);
+
     void createLikeDislike(Integer id, Integer userId, Integer grade);
 
     void deleteLikeDislike(Integer id, Integer userId, Integer grade);

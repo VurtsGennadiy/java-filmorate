@@ -3,8 +3,8 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Reviews;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.ReviewsStorage;
@@ -15,11 +15,11 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class ReviewsService {
     private final ReviewsStorage reviewsStorage;
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
+    private final EventService eventService;
 
     private static final int GRADE_LIKE = 1;
     private static final int GRADE_DISLIKE = -1;
@@ -27,28 +27,40 @@ public class ReviewsService {
     public Reviews create(Reviews reviews) {
         checkUserId(reviews.getUserId());
         checkFilmId(reviews.getFilmId());
-        return reviewsStorage.createReviews(reviews);
+        Reviews createdReviews = reviewsStorage.createReviews(reviews);
+        eventService.createEvent(createdReviews.getUserId(), Event.EventType.REVIEW, Event.Operation.ADD,
+                createdReviews.getReviewId());
+        return createdReviews;
     }
 
     public Reviews update(Reviews reviews) {
-        return reviewsStorage.updateReviews(reviews);
+        Reviews updatedReviews = reviewsStorage.updateReviews(reviews);
+        eventService.createEvent(updatedReviews.getUserId(), Event.EventType.REVIEW, Event.Operation.UPDATE,
+                updatedReviews.getReviewId());
+        return updatedReviews;
     }
 
-    @Transactional(readOnly = true)
     public Reviews getReviewsById(Integer reviewsId) {
         return reviewsStorage.getReviewsById(reviewsId)
                 .orElseThrow(() -> new NotFoundException("Отзыв с id = " + reviewsId + "не был найден"));
     }
 
-    @Transactional(readOnly = true)
     public List<Reviews> getReviewsByFilm(Integer filmId, Integer count) {
-        checkFilmId(filmId);
-        return reviewsStorage.getReviewsByFilm(filmId, count);
+        log.info(String.valueOf(filmId));
+        if (filmId == -1) {
+            log.debug("Запрошены самые популярные отзывы по всем фильмам");
+            return reviewsStorage.getAllFilmsReviews(count);
+        } else {
+            checkFilmId(filmId);
+            return reviewsStorage.getReviewsByFilm(filmId, count);
+        }
     }
 
     public void delete(Integer reviewsId) {
         checkReviewsId(reviewsId);
+        Reviews reviews = getReviewsById(reviewsId);
         reviewsStorage.deleteReviews(reviewsId);
+        eventService.createEvent(reviews.getUserId(), Event.EventType.REVIEW, Event.Operation.REMOVE, reviewsId);
     }
 
     public void putLike(Integer reviewsId, Integer userId) {

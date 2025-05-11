@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FriendStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -15,17 +16,20 @@ import java.util.List;
 public class FriendService {
     private final UserStorage userStorage;
     private final FriendStorage friendStorage;
+    private final EventService eventService;
 
     public void addFriend(Integer userId, Integer friendId) {
         checkUserExists(userId);
         checkUserExists(friendId);
         friendStorage.add(userId, friendId);
+        eventService.createEvent(userId, Event.EventType.FRIEND, Event.Operation.ADD, friendId);
     }
 
     public void removeFriend(Integer userId, Integer friendId) {
         checkUserExists(userId);
         checkUserExists(friendId);
         friendStorage.remove(userId, friendId);
+        eventService.createEvent(userId, Event.EventType.FRIEND, Event.Operation.REMOVE, friendId);
     }
 
     public Collection<User> getFriends(Integer userId) {

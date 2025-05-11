@@ -45,7 +45,7 @@ public class FilmRepositoryTest {
         testFilm1.setReleaseDate(LocalDate.of(2025, 4, 26));
         testFilm1.setDuration(100);
         testFilm1.setMpa(new MPA(3, "PG-13"));
-        testFilm1.setGenres(Set.of(new Genre(1, "Комедия")));
+        testFilm1.setGenres(new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"))));
 
         testFilm2.setId(2);
         testFilm2.setName("Путь к IT");
@@ -53,7 +53,8 @@ public class FilmRepositoryTest {
         testFilm2.setReleaseDate(LocalDate.of(2025, 4, 26));
         testFilm2.setDuration(10000);
         testFilm2.setMpa(new MPA(5, "NC-17"));
-        testFilm2.setGenres(Set.of(new Genre(1, "Комедия"), new Genre(2, "Драма")));
+        testFilm2.setGenres(new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"),
+                new Genre(2, "Драма"))));
 
         testUser.setId(1);
         testUser.setLogin("tester1");
@@ -98,7 +99,7 @@ public class FilmRepositoryTest {
        newFilm.setReleaseDate(LocalDate.now());
        newFilm.setDuration(1);
        newFilm.setMpa(new MPA(1, "G"));
-       newFilm.setGenres(Set.of(new Genre(1, "Комедия"), new Genre(2, "Драма")));
+       newFilm.setGenres(new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"), new Genre(2, "Драма"))));
 
        Film returned = filmRepository.create(newFilm);
        Optional<Film> fromStorage = filmRepository.getFilm(returned.getId());
@@ -172,10 +173,11 @@ public class FilmRepositoryTest {
     @Test
     @DisplayName("топ популярных фильмов")
     void getPopular() {
-        assertThat(filmRepository.getPopular(1)).isEqualTo(List.of(testFilm1));
+        assertThat(filmRepository.getPopular(1, null, null)).isEqualTo(List.of(testFilm1));
 
         filmRepository.addLike(2, 1);
         filmRepository.addLike(2, 2);
-        assertThat(filmRepository.getPopular(2)).isEqualTo(List.of(testFilm2, testFilm1));
+        assertThat(filmRepository.getPopular(2, null, null))
+                .isEqualTo(List.of(testFilm2, testFilm1));
     }
 }
