@@ -113,11 +113,24 @@ public class ReviewsRepository implements ReviewsStorage {
         String sql = """
                 WHERE r.film_id = :film_id
                 GROUP BY r.reviews_id
+                ORDER BY useful DESC
                 LIMIT :count
                 """;
         MapSqlParameterSource paramSource = new MapSqlParameterSource();
         paramSource.addValue("film_id", filmId);
         paramSource.addValue("count", count);
+        return jdbc.query(GET_SQL + sql, paramSource, mapper);
+    }
+
+    @Override
+    public List<Reviews> getAllFilmsReviews(Integer count) {
+        log.info("Запрос на получение отзывов {}", count);
+        String sql = """
+                GROUP BY r.reviews_id
+                ORDER BY useful DESC
+                LIMIT :count
+                """;
+        MapSqlParameterSource paramSource = new MapSqlParameterSource("count", count);
         return jdbc.query(GET_SQL + sql, paramSource, mapper);
     }
 
