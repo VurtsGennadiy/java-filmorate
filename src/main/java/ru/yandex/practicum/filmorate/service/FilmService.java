@@ -73,7 +73,11 @@ public class FilmService {
     }
 
     public Collection<Film> getPopular(Integer count) {
-        return filmStorage.getPopular(count);
+        return filmStorage.getPopular(count, null, null);
+    }
+
+    public Collection<Film> getPopularByGenreAndYear(Integer count, Integer genreId, Integer year) {
+        return filmStorage.getPopular(count, genreId, year);
     }
 
     public List<Film> searchFilms(String query, String by) {
