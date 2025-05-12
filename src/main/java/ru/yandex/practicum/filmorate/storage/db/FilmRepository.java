@@ -138,6 +138,7 @@ public class FilmRepository implements FilmStorage {
             Film film = jdbc.queryForObject(sql, params, filmRowMapper);
             connectGenres(List.of(film));
             connectDirectors(List.of(film));
+            connectRate(List.of(film));
             return Optional.of(film);
         } catch (EmptyResultDataAccessException emptyResult) {
             return Optional.empty();
@@ -152,6 +153,7 @@ public class FilmRepository implements FilmStorage {
         Collection<Film> films = jdbc.query(sql, filmRowMapper);
         connectGenres(films);
         connectDirectors(films);
+        connectRate(films);
         return films;
     }
 
@@ -164,6 +166,7 @@ public class FilmRepository implements FilmStorage {
         Collection<Film> films = jdbc.query(sql, params, filmRowMapper);
         connectGenres(films);
         connectDirectors(films);
+        connectRate(films);
         return films;
     }
 
@@ -265,6 +268,25 @@ public class FilmRepository implements FilmStorage {
         }
     }
 
+    private void connectRate(Collection<Film> films) {
+        String sql = """
+                SELECT film_id, AVG(score) as rating FROM likes
+                WHERE film_id IN (:film_ids)
+                GROUP BY (film_id)""";
+        Set<Integer> filmIds = films.stream().map(Film::getId).collect(Collectors.toSet());
+        MapSqlParameterSource params = new MapSqlParameterSource("film_ids", filmIds);
+        SqlRowSet rs = jdbc.queryForRowSet(sql, params);
+
+        Map<Integer, Film> filmsMap = films.stream()
+                .collect(Collectors.toMap(Film::getId, film -> film));
+
+        while (rs.next()) {
+            int filmId = rs.getInt("film_id");
+            int rating = (int) rs.getDouble("rating");
+            filmsMap.get(filmId).setRate(rating);
+        }
+    }
+
     @Override
     public void remove(Integer id) {
         String sql = "DELETE FROM films WHERE film_id = :film_id";
@@ -283,7 +305,6 @@ public class FilmRepository implements FilmStorage {
         String sql = """
                 MERGE INTO likes (film_id, user_id, score)
                 VALUES (:film_id, :user_id, :score)""";
-
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("film_id", filmId);
         params.addValue("user_id", userId);

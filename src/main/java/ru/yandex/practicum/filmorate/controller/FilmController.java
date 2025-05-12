@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/films")
@@ -47,13 +48,11 @@ public class FilmController {
         return filmService.getFilm(id);
     }
 
-    //Я совершенно не представляю как нужно соответствовать тесту add like, но
-    @PutMapping("/{id}/like/{userId}/{score}")
+    @PutMapping(value = {"/{id}/like/{userId}/{score}", "/{id}/like/{userId}"})
     public void addLike(@PathVariable Integer id,
-                        @PathVariable Integer userId,
-                        @PathVariable(required = false) Integer score) {
-
-        filmService.addOrUpdateScore(id, userId, score);
+                                        @PathVariable Integer userId,
+                                        @PathVariable(required = false) Integer score) {
+        filmService.addOrUpdateScore(id, userId, Objects.requireNonNullElse(score, 5));
     }
 
     @DeleteMapping("/{id}/like/{userId}")
