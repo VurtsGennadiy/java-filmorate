@@ -20,7 +20,7 @@ public interface FilmStorage {
 
     List<Film> searchFilm(String query, String by);
 
-    void addLike(Integer filmId, Integer userId);
+    void addOrUpdateScore(Integer filmId, Integer userId, Double score);
 
     void removeLike(Integer filmId, Integer userId);
 
