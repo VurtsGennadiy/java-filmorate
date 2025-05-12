@@ -11,8 +11,8 @@ spring:
   # src/main/resources/data.sql - заполнение данными
   datasource:
     # отключение автоматического перевода имен полей и таблиц в верхний регистр
-    #url: jdbc:h2:file:./db/filmorate; #DATABASE_TO_UPPER=false;  # сохранение данных в файл
-    url: jdbc:h2:mem:./db/filmorate; #DATABASE_TO_UPPER=false;  # сохранение данных в память
+    url: jdbc:h2:file:./db/filmorate; #DATABASE_TO_UPPER=false;  # сохранение данных в файл
+    #url: jdbc:h2:mem:./db/filmorate; #DATABASE_TO_UPPER=false;  # сохранение данных в память
     driverClassName: org.h2.Driver
     username: sa
     password: password
