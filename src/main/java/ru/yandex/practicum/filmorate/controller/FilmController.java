@@ -33,7 +33,7 @@ public class FilmController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void remove(@PathVariable Integer id) {
+    public void remove(@PathVariable @Positive Integer id) {
         filmService.remove(id);
     }
 
@@ -43,7 +43,7 @@ public class FilmController {
     }
 
     @GetMapping("/{id}")
-    public Film getFilm(@PathVariable Integer id) {
+    public Film getFilm(@PathVariable @Positive Integer id) {
         return filmService.getFilm(id);
     }
 
@@ -61,7 +61,7 @@ public class FilmController {
 
     @GetMapping("/popular")
     public Collection<Film> getPopular(@RequestParam(required = false) @Positive Integer count,
-                                       @RequestParam(required = false) Integer genreId,
+                                       @RequestParam(required = false) @Positive Integer genreId,
                                        @RequestParam(required = false) @Positive Integer year) {
         if (genreId == null && year == null) {
             if (count == null) {
@@ -78,7 +78,7 @@ public class FilmController {
     }
 
     @GetMapping("/director/{directorId}")
-    public List<Film> getFilmsByDirector(@PathVariable int directorId, @RequestParam String sortBy) {
+    public List<Film> getFilmsByDirector(@PathVariable @Positive int directorId, @RequestParam String sortBy) {
         return filmService.getFilmsByDirector(directorId, sortBy);
     }
 

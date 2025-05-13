@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,6 +15,7 @@ import java.util.List;
 @RestController()
 @RequestMapping("/mpa")
 @RequiredArgsConstructor
+@Validated
 public class MPAController {
     private final MPAService service;
 
@@ -22,7 +25,7 @@ public class MPAController {
     }
 
     @GetMapping("/{id}")
-    public MPA getById(@PathVariable("id") int id) {
+    public MPA getById(@PathVariable @Positive int id) {
         return service.getMPAbyId(id);
     }
 }
