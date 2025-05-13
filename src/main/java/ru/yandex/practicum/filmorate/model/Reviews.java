@@ -13,7 +13,6 @@ public class Reviews {
     private Integer reviewId;
 
     @NotBlank
-    @NotNull
     private String content;
 
     @NotNull

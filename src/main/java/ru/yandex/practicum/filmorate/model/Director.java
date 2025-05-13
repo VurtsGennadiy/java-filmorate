@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,9 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Director {
-    Integer id;
+    private Integer id;
 
-    @NotNull
     @NotBlank
-    String name;
+    private String name;
 }

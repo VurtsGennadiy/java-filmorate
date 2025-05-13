@@ -7,12 +7,12 @@ import lombok.*;
 @ToString
 @AllArgsConstructor(staticName = "of")
 public class Event {
-    Integer eventId;
-    Integer userId;
-    EventType eventType;
-    Operation operation;
-    Long timestamp;
-    Integer entityId;
+    private Integer eventId;
+    private Integer userId;
+    private EventType eventType;
+    private Operation operation;
+    private Long timestamp;
+    private Integer entityId;
 
     public enum EventType {
         LIKE,
