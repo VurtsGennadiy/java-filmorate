@@ -1,8 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import lombok.Data;
 import lombok.AllArgsConstructor;
@@ -23,12 +22,12 @@ public class Film {
     @Size(max = 200)
     private String description;
 
-    @PastOrPresent
     @SinceDate(CINEMA_DAY)
     private LocalDate releaseDate;
 
     @Positive
     private Integer duration;
-    private Set<Genre> genres = new HashSet<>();
     private MPA mpa;
+    private LinkedHashSet<Genre> genres = new LinkedHashSet<>();
+    private Set<Director> directors = new HashSet<>();
 }

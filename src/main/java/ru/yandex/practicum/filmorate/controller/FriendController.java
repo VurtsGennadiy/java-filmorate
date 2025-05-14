@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FriendService;
@@ -10,6 +12,7 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/users/{id}/friends")
 @RequiredArgsConstructor
+@Validated
 public class FriendController {
     private final FriendService friendService;
 
@@ -26,13 +29,13 @@ public class FriendController {
     }
 
     @GetMapping()
-    public Collection<User> get(@PathVariable Integer id) {
+    public Collection<User> get(@PathVariable @Positive Integer id) {
         return friendService.getFriends(id);
     }
 
     @GetMapping("/common/{otherId}")
-    public Collection<User> getCommon(@PathVariable Integer id,
-                                      @PathVariable Integer otherId) {
+    public Collection<User> getCommon(@PathVariable @Positive Integer id,
+                                      @PathVariable @Positive Integer otherId) {
         return friendService.getCommon(id, otherId);
     }
 }

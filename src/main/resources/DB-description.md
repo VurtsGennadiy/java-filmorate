@@ -42,6 +42,34 @@
 * _film_id_, int, NOT NULL - составной первичный ключ, внешний ключ (ссылается на film.film_id)
 * _user_id_, int, NOT NULL - составной первичный ключ, внешний ключ (ссылается на user.user_id)
 
+**directors** - информация о режиссёрах фильмов.
+* _director_id_, int, NOT NULL - primary key
+* _name_, varchar(30), NOT NULL - имя режиссёра, уникальное
+
+**film_director** - соединительная таблица, для связи таблиц films и directors. У одного фильма может быть несколько режиссёров.
+* _film_id_, int, NOT NULL - составной первичный ключ, внешний ключ (ссылается на film.film_id)
+* _director_id_, int, NOT NULL - составной первичный ключ, внешний ключ (ссылается на directors.director_id)
+
+**reviews** - отзывы пользователей на фильмы
+* _reviews_id_, int, NOT NULL - primary key
+* _content_, varchar(500), NOT NULL - содержание отзыва
+* _is_Positive_, boolean, NOT NULL - характеристика отзыва (положительный/негативный)
+* _user_id_, int, NOT NULL - внешний ключ (ссылается на user.user_id)
+* _film_id_, int, NOT NULL - внешний ключ (ссылается на film.film_id)
+
+**likes_reviews**
+* _reviews_id_, int, NOT NULL - составной первичный ключ, внешний ключ (ссылается на reviews.review_id)
+* _user_id_, int, NOT NULL - составной первичный ключ, внешний ключ (ссылается на user.user_id)
+* _grade_, int, NOT NULL - оценка (1 если лайк и -1 для дизлайка)
+
+**events** - события на платформе: добавление/удаление друзей, лайки и отзывы на фильмы
+* _event_id_, int, NOT NULL - primary key
+* _user_id_, int, NOT NULL -  внешний ключ (ссылается на user.user_id)
+* _event_type_, varchar(20), NOT NULL - тип события: LIKE, REVIEW, FRIEND
+* _operation_, varchar(20), NOT NULL - действие: REMOVE, ADD, UPDATE
+* _event_timestamp_, bigint, NOT NULL - время когда случилось событие
+* _entity_id_, int, NOT NULL - сущность с которой произошло событие
+
 ## Примеры запросов
 - Получение всех фильмов
 ```dbn-psql

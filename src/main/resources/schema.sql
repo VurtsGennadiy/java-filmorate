@@ -52,3 +52,64 @@ CREATE TABLE IF NOT EXISTS likes (
     FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS directors (
+    director_id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(30) NOT NULL,
+    CONSTRAINT uq_name UNIQUE (name)
+);
+
+CREATE TABLE IF NOT EXISTS film_director (
+    film_id INT NOT NULL,
+    director_id INT NOT NULL,
+    PRIMARY KEY (film_id, director_id),
+    FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE,
+    FOREIGN KEY (director_id) REFERENCES directors(director_id) ON DELETE CASCADE
+);
+
+-- ==========================================
+-- Таблица отзывов
+-- ==========================================
+-- Хранит информацию об отзывах пользователей на фильмы:
+--   - id отзыва
+--   - содержание отзыва
+--   - характеристика отзыва (положительный/негативный)
+--   - id пользователя
+--   - id фильма
+-- ------------------------------------------
+CREATE TABLE IF NOT EXISTS reviews (
+    reviews_id INT PRIMARY KEY AUTO_INCREMENT,
+    content VARCHAR(500) NOT NULL,
+    is_Positive BOOLEAN NOT NULL,
+    user_id INT NOT NULL,
+    film_id INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (film_id) REFERENCES films(film_id) ON DELETE CASCADE
+);
+
+-- ==========================================
+-- Оценки пользователей на отзыв
+-- ==========================================
+-- Хранит информацию об оценке(лайк или дизлайк) на отзыв:
+--   - id отзыва
+--   - id пользователя
+--   - оценка (1 если лайк и -1 для дизлайка)
+-- ------------------------------------------
+CREATE TABLE IF NOT EXISTS likes_reviews (
+    reviews_id INT NOT NULL,
+    user_id INT NOT NULL,
+    grade INT NOT NULL,
+    PRIMARY KEY(reviews_id, user_id),
+    FOREIGN KEY (reviews_id) REFERENCES reviews(reviews_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS events (
+    event_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    event_type VARCHAR(20) NOT NULL,
+    operation VARCHAR(20) NOT NULL,
+    event_timestamp BIGINT NOT NULL,
+    entity_id INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);

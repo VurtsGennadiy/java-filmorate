@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DuplicateDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
@@ -13,6 +15,7 @@ import java.util.Collection;
 @RequiredArgsConstructor
 public class UserService {
     private final UserStorage userStorage;
+    private final FilmStorage filmStorage;
 
     public User create(User user) {
         checkEmailDuplicate(user.getEmail());
@@ -54,5 +57,13 @@ public class UserService {
         if (userStorage.getUser(email).isPresent()) {
             throw new DuplicateDataException("Пользователь с таким email уже существует.");
         }
+    }
+
+    public Collection<Film> getRecommendedFilms(Integer userId) {
+        Integer id = userStorage.getMaxCommonLikesUser(userId);
+        if (id < 0) {
+            id = userId;
+        }
+        return filmStorage.getRecommendedFilms(userId, id);
     }
 }
